@@ -1,5 +1,3 @@
-use ndarray::Array;
-
 struct Layer {
     nodes: Vec<Node>,
 }
@@ -9,5 +7,7 @@ impl Layer {
         unimplemented!();
     }
 
-    fn values() -> Array {}
+    fn evaluate(&self, input: Vec<f64>) -> Vec<f64> {
+        self.nodes.map(|node| node.evaluate(input)).collect()
+    }
 }

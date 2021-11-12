@@ -1,9 +1,6 @@
-use ndarray::prelude::*;
-use ndarray::Array;
-
 struct Node {
-    weights: Array,
-    bias: Array,
+    weights: Vec<f64>,
+    bias: Vec<f64>,
     value: i64,
 }
 

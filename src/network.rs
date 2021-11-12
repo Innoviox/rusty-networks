@@ -1,7 +1,5 @@
-use ndarray::Array;
-
 struct Network {
-    Layers: Vec<Layer>,
+    layers: Vec<Layer>,
 }
 
 impl Network {
@@ -9,15 +7,29 @@ impl Network {
         unimplemented!();
     }
 
-    pub fn evaluate(&self, input: Array) -> i64 {
+    pub fn evaluate(&self, input: Vec<f64>) -> i64 {
+        // self.layers[0].set_values(input);
+
+        let mut values: Vec<f64> = input;
+
+        for layer in self.layers.iter().skip(1) {
+            values = layer.evaluate(values);
+        }
+
+        0
+    }
+
+    fn train(&mut self, training_data: Vec<f64>, correct_output: Vec<f64>) {
         unimplemented!();
     }
 
-    fn train(&mut self, training_data: Array, correct_output: Array);
+    fn train_epochs(&mut self, training_data: Vec<f64>, correct_output: Vec<f64>) {
+        unimplemented!();
+    }
 
-    fn train_epochs(&mut self, training_data: Array, correct_output: Array);
-
-    fn set_loss_function(&mut self, loss: impl Fn(i64) -> i64);
+    fn set_loss_function(&mut self, loss: impl Fn(i64) -> i64) {
+        unimplemented!();
+    }
 
     pub fn set_optimizer_function() {
         unimplemented!();
