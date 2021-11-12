@@ -1,9 +1,9 @@
 use crate::utils::dot;
 
 pub struct Node {
-    weights: Vec<f64>,
-    bias: f64, // i think each node has one bias, not one bias per input
-    value: i64,
+    pub weights: Vec<f64>,
+    pub bias: f64, // i think each node has one bias, not one bias per input
+    pub value: i64,
 }
 
 impl Node {

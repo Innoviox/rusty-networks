@@ -1,7 +1,7 @@
 use crate::node::Node;
 
 pub struct Layer {
-    nodes: Vec<Node>,
+    pub nodes: Vec<Node>,
 }
 
 impl Layer {
