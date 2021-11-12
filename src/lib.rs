@@ -1,6 +1,7 @@
 mod layer;
 mod network;
 mod node;
+mod utils;
 
 #[cfg(test)]
 mod tests {

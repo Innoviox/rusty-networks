@@ -1,5 +1,8 @@
+use crate::layer::Layer;
+
 struct Network {
     layers: Vec<Layer>,
+    activation: Box<dyn Fn(f64) -> f64>,
 }
 
 impl Network {
@@ -13,7 +16,7 @@ impl Network {
         let mut values: Vec<f64> = input;
 
         for layer in self.layers.iter().skip(1) {
-            values = layer.evaluate(values);
+            values = layer.evaluate(values, &self.activation);
         }
 
         0

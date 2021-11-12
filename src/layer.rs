@@ -1,4 +1,6 @@
-struct Layer {
+use crate::node::Node;
+
+pub struct Layer {
     nodes: Vec<Node>,
 }
 
@@ -7,7 +9,10 @@ impl Layer {
         unimplemented!();
     }
 
-    fn evaluate(&self, input: Vec<f64>) -> Vec<f64> {
-        self.nodes.map(|node| node.evaluate(input)).collect()
+    pub fn evaluate(&self, input: Vec<f64>, activation: &Box<dyn Fn(f64) -> f64>) -> Vec<f64> {
+        self.nodes
+            .iter()
+            .map(|node| node.evaluate(&input, activation))
+            .collect()
     }
 }
