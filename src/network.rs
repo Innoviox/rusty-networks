@@ -3,6 +3,7 @@ use crate::layer::Layer;
 struct Network {
     layers: Vec<Layer>,
     activation: Box<dyn Fn(f64) -> f64>,
+    loss: Box<dyn Fn(f64) -> f64>,
 }
 
 impl Network {
@@ -10,7 +11,7 @@ impl Network {
         unimplemented!();
     }
 
-    pub fn evaluate(&self, input: Vec<f64>) -> i64 {
+    pub fn evaluate(&self, input: Vec<f64>) -> Vec<f64> {
         // self.layers[0].set_values(input);
 
         let mut values: Vec<f64> = input;
@@ -19,7 +20,7 @@ impl Network {
             values = layer.evaluate(values, &self.activation);
         }
 
-        0
+        values
     }
 
     fn train(&mut self, training_data: Vec<f64>, correct_output: Vec<f64>) {
