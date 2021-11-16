@@ -1,13 +1,11 @@
-mod layer;
-mod network;
-mod node;
-mod utils;
+pub mod layer;
+pub mod network;
+pub mod node;
+pub mod utils;
 
 #[cfg(test)]
 mod tests {
+
     #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
+    fn it_works() {}
 }
