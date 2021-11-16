@@ -65,27 +65,23 @@ impl Network {
             let result = self.evaluate(input);
             let base_loss = (self.loss)(&result, output);
 
-            let mut gradient = vec![];
+            let mut gradient = self.make_weights_grid();
 
             let mut grad_bias = vec![];
 
             for layer_n in 0..self.layers.len() {
-                let mut layer_gradient = vec![];
                 let mut layer_bias = vec![];
                 for node_n in 0..self.layers[layer_n].nodes.len() {
-                    let mut neuron_gradient = vec![];
                     for weight_n in 0..self.layers[layer_n].nodes[node_n].weights.len() {
                         self.change_weight(layer_n, node_n, weight_n, 0.01);
 
                         let new_loss = (self.loss)(&(self.evaluate(input)), output);
                         let del = (new_loss - base_loss) / 0.01;
 
-                        neuron_gradient.push(del);
+                        gradient[layer_n][node_n][weight_n] = del;
 
                         self.change_weight(layer_n, node_n, weight_n, -0.01);
                     }
-
-                    layer_gradient.push(neuron_gradient);
 
                     self.change_bias(layer_n, node_n, 0.01);
 
@@ -97,7 +93,6 @@ impl Network {
                     self.change_bias(layer_n, node_n, -0.01);
                 }
 
-                gradient.push(layer_gradient);
                 grad_bias.push(layer_bias);
             }
 
@@ -114,6 +109,10 @@ impl Network {
                     self.change_bias(layer_n, node_n, -grad_bias[layer_n][node_n]);
                 }
             }
+
+            // todo: store bias in weights array of neuron
+            // todo: store previous delta, use node[weight_index] += (rate * weight_update) + (momentum * prev_delta);
+            // todo: halt condition
         }
     }
 
@@ -134,6 +133,26 @@ impl Network {
 
     pub fn set_optimizer_function() {
         unimplemented!();
+    }
+
+    fn make_weights_grid(&self) -> Vec<Vec<Vec<f64>>> {
+        let mut gradient = vec![];
+
+        for layer_n in 0..self.layers.len() {
+            let mut layer_gradient = vec![];
+            for node_n in 0..self.layers[layer_n].nodes.len() {
+                let mut neuron_gradient = vec![];
+                for weight_n in 0..self.layers[layer_n].nodes[node_n].weights.len() {
+                    neuron_gradient.push(0.0f64);
+                }
+
+                layer_gradient.push(neuron_gradient);
+            }
+
+            gradient.push(layer_gradient);
+        }
+
+        gradient
     }
 }
 
