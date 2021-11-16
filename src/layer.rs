@@ -9,10 +9,10 @@ impl Layer {
         unimplemented!();
     }
 
-    pub fn evaluate(&self, input: Vec<f64>, activation: &Box<dyn Fn(f64) -> f64>) -> Vec<f64> {
+    pub fn evaluate(&self, input: &Vec<f64>, activation: &Box<dyn Fn(f64) -> f64>) -> Vec<f64> {
         self.nodes
             .iter()
-            .map(|node| node.evaluate(&input, activation))
+            .map(|node| node.evaluate(input, activation))
             .collect()
     }
 }
