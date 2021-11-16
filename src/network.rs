@@ -16,19 +16,22 @@ impl Network {
         let mut rng = rand::thread_rng();
 
         let mut layers = vec![];
-        let mut last_length = 0;
-        for l in shape {
+        let mut last_length = shape[0];
+        for l in shape.iter().skip(1) {
+            // skip first layer
             let mut nodes = vec![];
-            for i in 0..l {
+            for i in 0..*l {
                 let n = Node {
-                    weights: (0..last_length).map(|_| rng.gen_range(0.0..1.0)).collect(),
-                    bias: rng.gen_range(0.0..1.0),
+                    weights: (0..last_length + 1) // +1 cause bias
+                        .map(|_| rng.gen_range(0.0..1.0))
+                        .collect(),
+                    // bias: rng.gen_range(0.0..1.0),
                     value: 0,
                 };
                 nodes.push(n);
             }
             layers.push(Layer { nodes });
-            last_length = l;
+            last_length = *l;
         }
 
         Network {
@@ -39,10 +42,8 @@ impl Network {
     }
 
     pub fn evaluate(&self, input: &Vec<f64>) -> Vec<f64> {
-        // self.layers[0].set_values(input);
-
         let mut values: Vec<f64> = input.to_vec();
-        for layer in self.layers.iter().skip(1) {
+        for layer in &self.layers {
             values = layer.evaluate(&values, &self.activation);
         }
 
@@ -53,9 +54,9 @@ impl Network {
         self.layers[layer_n].nodes[node_n].weights[weight_n] += delta;
     }
 
-    fn change_bias(&mut self, layer_n: usize, node_n: usize, delta: f64) {
-        self.layers[layer_n].nodes[node_n].bias += delta;
-    }
+    // fn change_bias(&mut self, layer_n: usize, node_n: usize, delta: f64) {
+    //     self.layers[layer_n].nodes[node_n].bias += delta;
+    // }
 
     fn train(&mut self, training_data: &Vec<Vec<f64>>, correct_output: &Vec<Vec<f64>>) {
         for i in 0..training_data.len() {
@@ -67,10 +68,7 @@ impl Network {
 
             let mut gradient = self.make_weights_grid();
 
-            let mut grad_bias = vec![];
-
             for layer_n in 0..self.layers.len() {
-                let mut layer_bias = vec![];
                 for node_n in 0..self.layers[layer_n].nodes.len() {
                     for weight_n in 0..self.layers[layer_n].nodes[node_n].weights.len() {
                         self.change_weight(layer_n, node_n, weight_n, 0.01);
@@ -82,18 +80,7 @@ impl Network {
 
                         self.change_weight(layer_n, node_n, weight_n, -0.01);
                     }
-
-                    self.change_bias(layer_n, node_n, 0.01);
-
-                    let new_loss = (self.loss)(&(self.evaluate(input)), output);
-                    let del = (new_loss - base_loss) / 0.01;
-
-                    layer_bias.push(del);
-
-                    self.change_bias(layer_n, node_n, -0.01);
                 }
-
-                grad_bias.push(layer_bias);
             }
 
             for layer_n in 0..gradient.len() {
@@ -106,7 +93,6 @@ impl Network {
                             -gradient[layer_n][node_n][weight_n],
                         );
                     }
-                    self.change_bias(layer_n, node_n, -grad_bias[layer_n][node_n]);
                 }
             }
 

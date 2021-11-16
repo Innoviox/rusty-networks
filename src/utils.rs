@@ -1,11 +1,7 @@
-pub fn dot(a: &Vec<f64>, b: &Vec<f64>) -> f64 {
-    if a.len() != b.len() {
-        unimplemented!() // forgot how to raise errors
-    }
-
-    let mut result = 0.0;
-    for i in 0..a.len() {
-        result += a[i] * b[i];
+pub fn dot(input: &Vec<f64>, weights: &Vec<f64>) -> f64 {
+    let mut result = weights[0];
+    for i in 1..weights.len() {
+        result += input[i - 1] * weights[i];
     }
 
     result
