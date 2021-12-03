@@ -140,6 +140,12 @@ impl Network {
 
         gradient
     }
+
+    pub fn convolve(&self, kernel: Vec<Vec<f64>>, stride: usize, padding: usize) {
+        // ignore stride and padding for now
+    }
+
+    pub fn max_pool(&self) {}
 }
 
 impl fmt::Display for Network {
