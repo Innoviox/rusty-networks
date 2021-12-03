@@ -1,5 +1,5 @@
 use rand::Rng;
-use rustynetworks::convolution::convolve;
+use rustynetworks::convolution;
 use rustynetworks::network::Network;
 
 fn main() {
@@ -15,8 +15,16 @@ fn main() {
         vec![0.0, 1.0, 0.0],
         vec![1.0, 0.0, 1.0],
     ];
-    println!("{:?}", convolve(matrix, kernel));
+    println!("{:?}", convolution::convolve(matrix, kernel));
     // [[4.0, 3.0, 4.0], [2.0, 4.0, 3.0], [2.0, 3.0, 4.0]]
+    let matrix2 = vec![
+        vec![3.0, 3.0, 2.0, 1.0, 0.0],
+        vec![0.0, 0.0, 1.0, 3.0, 1.0],
+        vec![3.0, 1.0, 2.0, 2.0, 3.0],
+        vec![2.0, 0.0, 0.0, 2.0, 2.0],
+        vec![2.0, 0.0, 0.0, 0.0, 1.0],
+    ];
+    println!("{:?}", convolution::max_pool(matrix2, (3, 3)));
     // let mut network = Network::new(vec![3, 5, 3]);
 
     // let mut rng = rand::thread_rng();
