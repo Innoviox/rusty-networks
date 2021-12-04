@@ -16,6 +16,14 @@ pub fn sigmoid(x: f64) -> f64 {
     1.0 / (1.0 + (-x).exp())
 }
 
+pub fn relu(x: f64) -> f64 {
+    if x > 0.0 {
+	x
+    } else {
+	0.0
+    }
+}
+
 // mean squared error: (actually total squared error):
 // sum squares of difference between output and actual expected value
 // goal is to minimize this

@@ -42,7 +42,8 @@ impl Network {
 
         Network {
             layers,
-            activation: Box::new(utils::sigmoid),
+	    //            activation: Box::new(utils::sigmoid),
+	    activation: Box::new(utils::relu),
             loss: Box::new(utils::mse),
             transforms: vec![],
 //	    optimizer: optimizers::GradDescent::new(),
