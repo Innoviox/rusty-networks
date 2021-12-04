@@ -1,6 +1,7 @@
 use crate::convolution;
 use crate::layer::Layer;
 use crate::node::Node;
+use crate::optimizers;
 use crate::utils;
 use crate::utils::{progress_bar, progress_bar_into};
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
@@ -12,6 +13,7 @@ pub struct Network {
     activation: Box<dyn Fn(f64) -> f64>,
     loss: Box<dyn Fn(&Vec<f64>, &Vec<f64>) -> f64>,
     transforms: Vec<convolution::Transform>,
+    optimizer: Box<dyn optimizers::Optimizer>,
 }
 
 impl Network {
@@ -43,6 +45,8 @@ impl Network {
             activation: Box::new(utils::sigmoid),
             loss: Box::new(utils::mse),
             transforms: vec![],
+//	    optimizer: optimizers::GradDescent::new(),
+	    optimizer: optimizers::Adam::new(&shape, 0.9, 0.9, 0.99),
         }
     }
 
@@ -89,14 +93,16 @@ impl Network {
                 }
             }
 
-            for layer_n in 0..gradient.len() {
-                for node_n in 0..gradient[layer_n].len() {
-                    for weight_n in 0..gradient[layer_n][node_n].len() {
+	    let dw = self.optimizer.optimize(&gradient);
+
+            for layer_n in 0..dw.len() {
+                for node_n in 0..dw[layer_n].len() {
+                    for weight_n in 0..dw[layer_n][node_n].len() {
                         self.change_weight(
                             layer_n,
                             node_n,
                             weight_n,
-                            -gradient[layer_n][node_n][weight_n],
+                            dw[layer_n][node_n][weight_n],
                         );
                     }
                 }
@@ -131,7 +137,7 @@ impl Network {
         unimplemented!();
     }
 
-    fn make_weights_grid(&self) -> Vec<Vec<Vec<f64>>> {
+    pub fn make_weights_grid(&self) -> Vec<Vec<Vec<f64>>> {
         let mut gradient = vec![];
 
         for layer_n in 0..self.layers.len() {

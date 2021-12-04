@@ -1,5 +1,6 @@
 use crate::utils::dot;
 
+#[derive(Debug)]
 pub struct Node {
     pub weights: Vec<f64>, // first weight is bias
     // pub bias: f64, // i think each node has one bias, not one bias per input

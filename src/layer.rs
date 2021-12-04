@@ -1,5 +1,6 @@
 use crate::node::Node;
 
+#[derive(Debug)]
 pub struct Layer {
     pub nodes: Vec<Node>,
 }
