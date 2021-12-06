@@ -18,7 +18,7 @@ fn _read_mnist(img_fn: &str, lab_fn: &str) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
     im_f.read(&mut [0; 16]).ok();
     lab_f.read(&mut [0; 8]).ok();
 
-    for _ in progress_bar_into(0..60000) {
+    for _ in progress_bar_into(0..6000) {
         im_f.read(&mut img_buffer).ok();
         lab_f.read(&mut label_buffer).ok();
 
@@ -60,7 +60,7 @@ fn main() {
         vec![1.0, 0.0, 1.0],
     ];
 
-    let shape = vec![169, 10];
+    let shape = vec![361, 10];
 
     let mut network = Network::new(shape);
 
@@ -71,10 +71,10 @@ fn main() {
         .add_transform(Transform::MaxPool((2, 2)))
         .add_transform(Transform::Convolve2D(kernel.clone(), 22))
         .add_transform(Transform::MaxPool((2, 2)))
-        .add_transform(Transform::Convolve2D(kernel.clone(), 19))
-        .add_transform(Transform::MaxPool((2, 2)))
-        .add_transform(Transform::Convolve2D(kernel.clone(), 16))
-        .add_transform(Transform::MaxPool((2, 2)))
+        // .add_transform(Transform::Convolve2D(kernel.clone(), 19))
+        // .add_transform(Transform::MaxPool((2, 2)))
+        // .add_transform(Transform::Convolve2D(kernel.clone(), 16))
+        // .add_transform(Transform::MaxPool((2, 2)))
         .add_transform(Transform::Flatten());
 
     let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
