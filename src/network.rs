@@ -2,6 +2,7 @@ use crate::convolution;
 use crate::layer::Layer;
 use crate::node::Node;
 use crate::utils;
+use indicatif::ProgressIterator;
 use rand::Rng;
 use std::fmt;
 
@@ -62,7 +63,7 @@ impl Network {
     // }
 
     fn train(&mut self, training_data: &Vec<Vec<f64>>, correct_output: &Vec<Vec<f64>>) {
-        for i in tqdm_rs::Tqdm::new(0..training_data.len()) {
+        for i in (0..training_data.len()).progress() {
             // tqdm_rs::write(&format!("training {}", i));
             println!("Training {}", i);
             let input = &training_data[i];
@@ -119,6 +120,7 @@ impl Network {
     ) {
         let transformed_data = training_data
             .iter()
+            .progress()
             .map(|i| self.apply_transforms(i.to_vec()))
             .collect();
 
