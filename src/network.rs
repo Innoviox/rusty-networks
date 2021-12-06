@@ -62,7 +62,7 @@ impl Network {
     // }
 
     fn train(&mut self, training_data: &Vec<Vec<f64>>, correct_output: &Vec<Vec<f64>>) {
-        for i in 0..training_data.len() {
+        for i in tqdm_rs::Tqdm::new(0..training_data.len()) {
             let input = &training_data[i];
             let output = &correct_output[i];
 
@@ -159,12 +159,13 @@ impl Network {
                     let mut matrix = vec![];
                     let mut row = vec![];
                     for (idx, val) in input.iter().enumerate() {
-                        if (idx == (matrix.len() + 1) * width) || (idx == input.len() - 1) {
+                        if idx == ((matrix.len() + 1) * width) {
                             matrix.push(row);
                             row = vec![];
                         }
                         row.push(val.clone());
                     }
+                    matrix.push(row);
 
                     matrix2d = convolution::convolve(matrix, kernel.to_vec());
                 }

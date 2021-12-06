@@ -34,6 +34,14 @@ fn _read_mnist(img_fn: &str, lab_fn: &str) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
         labels.push(label);
     }
 
+    // let i = &images[49235];
+    // for j in 0..28 {
+    //     for k in 0..28 {
+    //         print!("{}", i[j * 28 + k]);
+    //     }
+    //     println!();
+    // }
+
     (images, labels)
 }
 
@@ -44,7 +52,7 @@ fn read_mnist() -> (
     (
         _read_mnist(
             "mnist/train-images-idx3-ubyte",
-            "mnist/train-images-idx3-ubyte",
+            "mnist/train-labels-idx1-ubyte",
         ),
         _read_mnist(
             "mnist/t10k-images-idx3-ubyte",
