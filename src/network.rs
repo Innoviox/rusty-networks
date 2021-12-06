@@ -65,18 +65,14 @@ impl Network {
     fn train(&mut self, training_data: &Vec<Vec<f64>>, correct_output: &Vec<Vec<f64>>) {
         for i in (0..training_data.len()).progress() {
             // tqdm_rs::write(&format!("training {}", i));
-            println!("Training {}", i);
             let input = &training_data[i];
             let output = &correct_output[i];
 
             let result = self.evaluate(input);
             let base_loss = (self.loss)(&result, output);
 
-            println!("Loss calculated");
-
             let mut gradient = self.make_weights_grid();
 
-            println!("Calculating weights deltas");
             for layer_n in 0..self.layers.len() {
                 for node_n in 0..self.layers[layer_n].nodes.len() {
                     for weight_n in 0..self.layers[layer_n].nodes[node_n].weights.len() {
@@ -92,7 +88,6 @@ impl Network {
                 }
             }
 
-            println!("Updating weights");
             for layer_n in 0..gradient.len() {
                 for node_n in 0..gradient[layer_n].len() {
                     for weight_n in 0..gradient[layer_n][node_n].len() {
@@ -165,7 +160,7 @@ impl Network {
 
     fn apply_transforms(&self, input: Vec<f64>) -> Vec<f64> {
         let mut matrix2d = vec![];
-        let mut result_vec = vec![];
+        let mut result_vec = input.clone();
         for t in &self.transforms {
             match t {
                 convolution::Transform::Convolve2D(kernel, width) => {

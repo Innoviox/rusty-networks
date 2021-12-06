@@ -1,3 +1,4 @@
+use indicatif::ProgressIterator;
 use rustynetworks::convolution::Transform;
 use rustynetworks::network::Network;
 use std::fs::File;
@@ -16,7 +17,7 @@ fn _read_mnist(img_fn: &str, lab_fn: &str) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
     im_f.read(&mut [0; 16]).ok();
     lab_f.read(&mut [0; 8]).ok();
 
-    for _ in 0..60000 {
+    for _ in (0..60000).progress() {
         im_f.read(&mut img_buffer).ok();
         lab_f.read(&mut label_buffer).ok();
 
@@ -66,12 +67,21 @@ fn main() {
         vec![1.0, 0.0, 1.0],
     ];
 
-    let shape = vec![625, 100, 10];
+    let shape = vec![256, 10];
 
     let mut network = Network::new(shape);
 
     network
-        .add_transform(Transform::Convolve2D(kernel, 28))
+        .add_transform(Transform::Convolve2D(kernel.clone(), 28))
+        .add_transform(Transform::MaxPool((2, 2)))
+        .add_transform(Transform::Flatten())
+        .add_transform(Transform::Convolve2D(kernel.clone(), 25))
+        .add_transform(Transform::MaxPool((2, 2)))
+        .add_transform(Transform::Flatten())
+        .add_transform(Transform::Convolve2D(kernel.clone(), 22))
+        .add_transform(Transform::MaxPool((2, 2)))
+        .add_transform(Transform::Flatten())
+        .add_transform(Transform::Convolve2D(kernel.clone(), 19))
         .add_transform(Transform::MaxPool((2, 2)))
         .add_transform(Transform::Flatten());
 
