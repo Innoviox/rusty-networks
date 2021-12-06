@@ -81,7 +81,7 @@ fn main() {
 
     network.train_epochs(&train_img, &train_label, 5);
 
-    for idx in 0..50 {
+    for idx in 0..500 {
         let i = &test_img[idx];
         for j in 0..28 {
             for k in 0..28 {
