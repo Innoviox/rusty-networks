@@ -164,23 +164,22 @@ impl Network {
         for t in &self.transforms {
             match t {
                 convolution::Transform::Convolve2D(kernel, width) => {
-                    let mut matrix = vec![];
-                    let mut row = vec![];
-                    for (idx, val) in input.iter().enumerate() {
-                        if idx == ((matrix.len() + 1) * width) {
-                            matrix.push(row);
-                            row = vec![];
+                    if matrix2d.len() == 0 {
+                        let mut row = vec![];
+                        for (idx, val) in input.iter().enumerate() {
+                            if idx == ((matrix2d.len() + 1) * width) {
+                                matrix2d.push(row);
+                                row = vec![];
+                            }
+                            row.push(val.clone());
                         }
-                        row.push(val.clone());
+                        matrix2d.push(row);
                     }
-                    matrix.push(row);
 
-                    matrix2d = convolution::convolve(matrix, kernel.to_vec());
-                    // println!("after convolve {} {}", matrix2d.len(), matrix2d[0].len());
+                    matrix2d = convolution::convolve(matrix2d, kernel.to_vec());
                 }
                 convolution::Transform::MaxPool(dim) => {
                     matrix2d = convolution::max_pool(matrix2d, (dim.0, dim.1));
-                    // println!("after maxpool {} {}", matrix2d.len(), matrix2d[0].len());
                 }
                 convolution::Transform::Flatten() => result_vec = convolution::flatten(&matrix2d),
             }

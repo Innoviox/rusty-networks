@@ -33,14 +33,6 @@ fn _read_mnist(img_fn: &str, lab_fn: &str) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
         labels.push(label);
     }
 
-    // let i = &images[49235];
-    // for j in 0..28 {
-    //     for k in 0..28 {
-    //         print!("{}", i[j * 28 + k]);
-    //     }
-    //     println!();
-    // }
-
     (images, labels)
 }
 
@@ -74,18 +66,27 @@ fn main() {
     network
         .add_transform(Transform::Convolve2D(kernel.clone(), 28))
         .add_transform(Transform::MaxPool((2, 2)))
-        .add_transform(Transform::Flatten())
         .add_transform(Transform::Convolve2D(kernel.clone(), 25))
         .add_transform(Transform::MaxPool((2, 2)))
-        .add_transform(Transform::Flatten())
         .add_transform(Transform::Convolve2D(kernel.clone(), 22))
         .add_transform(Transform::MaxPool((2, 2)))
-        .add_transform(Transform::Flatten())
         .add_transform(Transform::Convolve2D(kernel.clone(), 19))
         .add_transform(Transform::MaxPool((2, 2)))
         .add_transform(Transform::Flatten());
 
-    let ((train_img, train_label), (_test_img, _test_labels)) = read_mnist();
+    let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
 
     network.train_epochs(&train_img, &train_label, 5);
+
+    for idx in 0..50 {
+        let i = &test_img[idx];
+        for j in 0..28 {
+            for k in 0..28 {
+                print!("{}", i[j * 28 + k]);
+            }
+            println!();
+        }
+        println!("{:?}", test_labels[idx]);
+        println!("{:?}", network.evaluate(i));
+    }
 }
