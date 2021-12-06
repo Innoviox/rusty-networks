@@ -7,7 +7,7 @@ pub fn dot(input: &Vec<f64>, weights: &Vec<f64>) -> f64 {
     result
 }
 
-type func = Box<dyn Fn(f64) -> f64>; // might make things look nicer idk
+// type func = Box<dyn Fn(f64) -> f64>; // might make things look nicer idk
 
 pub fn sigmoid(x: f64) -> f64 {
     1.0 / (1.0 + (-x).exp())

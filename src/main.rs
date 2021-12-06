@@ -1,8 +1,6 @@
-use rand::Rng;
 use rustynetworks::convolution::Transform;
 use rustynetworks::network::Network;
 use std::fs::File;
-use std::io;
 use std::io::prelude::*;
 
 fn _read_mnist(img_fn: &str, lab_fn: &str) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
@@ -68,7 +66,7 @@ fn main() {
         vec![1.0, 0.0, 1.0],
     ];
 
-    let shape = vec![784, 100, 10];
+    let shape = vec![625, 100, 10];
 
     let mut network = Network::new(shape);
 
@@ -77,7 +75,7 @@ fn main() {
         .add_transform(Transform::MaxPool((2, 2)))
         .add_transform(Transform::Flatten());
 
-    let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
+    let ((train_img, train_label), (_test_img, _test_labels)) = read_mnist();
 
     network.train_epochs(&train_img, &train_label, 5);
 }

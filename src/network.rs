@@ -22,7 +22,7 @@ impl Network {
         for l in shape.iter().skip(1) {
             // skip first layer
             let mut nodes = vec![];
-            for i in 0..*l {
+            for _i in 0..*l {
                 let n = Node {
                     weights: (0..last_length + 1) // +1 cause bias
                         .map(|_| rng.gen_range(0.0..1.0))
@@ -45,7 +45,7 @@ impl Network {
     }
 
     pub fn evaluate(&self, input: &Vec<f64>) -> Vec<f64> {
-        let mut values: Vec<f64> = self.apply_transforms(input.to_vec());
+        let mut values: Vec<f64> = input.to_vec();
         for layer in &self.layers {
             values = layer.evaluate(&values, &self.activation);
         }
@@ -63,14 +63,19 @@ impl Network {
 
     fn train(&mut self, training_data: &Vec<Vec<f64>>, correct_output: &Vec<Vec<f64>>) {
         for i in tqdm_rs::Tqdm::new(0..training_data.len()) {
+            // tqdm_rs::write(&format!("training {}", i));
+            println!("Training {}", i);
             let input = &training_data[i];
             let output = &correct_output[i];
 
             let result = self.evaluate(input);
             let base_loss = (self.loss)(&result, output);
 
+            println!("Loss calculated");
+
             let mut gradient = self.make_weights_grid();
 
+            println!("Calculating weights deltas");
             for layer_n in 0..self.layers.len() {
                 for node_n in 0..self.layers[layer_n].nodes.len() {
                     for weight_n in 0..self.layers[layer_n].nodes[node_n].weights.len() {
@@ -86,6 +91,7 @@ impl Network {
                 }
             }
 
+            println!("Updating weights");
             for layer_n in 0..gradient.len() {
                 for node_n in 0..gradient[layer_n].len() {
                     for weight_n in 0..gradient[layer_n][node_n].len() {
@@ -111,14 +117,19 @@ impl Network {
         correct_output: &Vec<Vec<f64>>,
         epochs: usize,
     ) {
-        for i in 0..epochs {
-            self.train(training_data, correct_output);
+        let transformed_data = training_data
+            .iter()
+            .map(|i| self.apply_transforms(i.to_vec()))
+            .collect();
+
+        for _i in 0..epochs {
+            self.train(&transformed_data, correct_output);
         }
     }
 
-    fn set_loss_function(&mut self, loss: impl Fn(i64) -> i64) {
-        unimplemented!();
-    }
+    // fn set_loss_function(&mut self, loss: impl Fn(i64) -> i64) {
+    //     unimplemented!();
+    // }
 
     pub fn set_optimizer_function() {
         unimplemented!();
@@ -131,7 +142,7 @@ impl Network {
             let mut layer_gradient = vec![];
             for node_n in 0..self.layers[layer_n].nodes.len() {
                 let mut neuron_gradient = vec![];
-                for weight_n in 0..self.layers[layer_n].nodes[node_n].weights.len() {
+                for _weight_n in 0..self.layers[layer_n].nodes[node_n].weights.len() {
                     neuron_gradient.push(0.0f64);
                 }
 
@@ -168,9 +179,11 @@ impl Network {
                     matrix.push(row);
 
                     matrix2d = convolution::convolve(matrix, kernel.to_vec());
+                    // println!("after convolve {} {}", matrix2d.len(), matrix2d[0].len());
                 }
                 convolution::Transform::MaxPool(dim) => {
                     matrix2d = convolution::max_pool(matrix2d, (dim.0, dim.1));
+                    // println!("after maxpool {} {}", matrix2d.len(), matrix2d[0].len());
                 }
                 convolution::Transform::Flatten() => result_vec = convolution::flatten(&matrix2d),
             }

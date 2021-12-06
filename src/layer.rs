@@ -5,9 +5,9 @@ pub struct Layer {
 }
 
 impl Layer {
-    fn backprop() {
-        unimplemented!();
-    }
+    // fn backprop() {
+    //     unimplemented!();
+    // }
 
     pub fn evaluate(&self, input: &Vec<f64>, activation: &Box<dyn Fn(f64) -> f64>) -> Vec<f64> {
         self.nodes

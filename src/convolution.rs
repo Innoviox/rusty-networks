@@ -1,10 +1,8 @@
-use std::sync::WaitTimeoutResult;
-
 fn _filter_fn<F>(matrix: &Vec<Vec<f64>>, dim: (usize, usize), f: F) -> Vec<Vec<f64>>
 where
     F: Fn(usize, usize, usize, usize, f64) -> f64,
 {
-    let stride = 1; // todo
+    let _stride = 1; // todo
 
     let mut result = vec![];
 
