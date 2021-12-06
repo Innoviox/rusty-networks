@@ -1,3 +1,4 @@
+use crate::convolution;
 use crate::layer::Layer;
 use crate::node::Node;
 use crate::utils;
@@ -8,6 +9,7 @@ pub struct Network {
     layers: Vec<Layer>,
     activation: Box<dyn Fn(f64) -> f64>,
     loss: Box<dyn Fn(&Vec<f64>, &Vec<f64>) -> f64>,
+    transforms: Vec<convolution::Transform>,
 }
 
 impl Network {
@@ -38,11 +40,12 @@ impl Network {
             layers,
             activation: Box::new(utils::sigmoid),
             loss: Box::new(utils::mse),
+            transforms: vec![],
         }
     }
 
     pub fn evaluate(&self, input: &Vec<f64>) -> Vec<f64> {
-        let mut values: Vec<f64> = input.to_vec();
+        let mut values: Vec<f64> = self.apply_transforms(input.to_vec());
         for layer in &self.layers {
             values = layer.evaluate(&values, &self.activation);
         }
@@ -141,11 +144,37 @@ impl Network {
         gradient
     }
 
-    pub fn convolve(&self, kernel: Vec<Vec<f64>>, stride: usize, padding: usize) {
-        // ignore stride and padding for now
+    pub fn add_transform(&mut self, transform: convolution::Transform) {
+        self.transforms.push(transform);
     }
 
-    pub fn max_pool(&self) {}
+    fn apply_transforms(&self, input: Vec<f64>) -> Vec<f64> {
+        let mut matrix2d = vec![];
+        let mut result_vec = vec![];
+        for t in &self.transforms {
+            match t {
+                convolution::Transform::Convolve2D(kernel, width) => {
+                    let mut matrix = vec![];
+                    let mut row = vec![];
+                    for (idx, val) in input.iter().enumerate() {
+                        if (idx == (matrix.len() + 1) * width) || (idx == input.len() - 1) {
+                            matrix.push(row);
+                            row = vec![];
+                        }
+                        row.push(val.clone());
+                    }
+
+                    matrix2d = convolution::convolve(matrix, kernel.to_vec());
+                }
+                convolution::Transform::MaxPool(dim) => {
+                    matrix2d = convolution::max_pool(matrix2d, (dim.0, dim.1));
+                }
+                convolution::Transform::Flatten() => result_vec = convolution::flatten(&matrix2d),
+            }
+        }
+
+        result_vec
+    }
 }
 
 impl fmt::Display for Network {

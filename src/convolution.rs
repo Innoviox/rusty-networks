@@ -1,3 +1,5 @@
+use std::sync::WaitTimeoutResult;
+
 fn _filter_fn<F>(matrix: &Vec<Vec<f64>>, dim: (usize, usize), f: F) -> Vec<Vec<f64>>
 where
     F: Fn(usize, usize, usize, usize, f64) -> f64,
@@ -36,4 +38,21 @@ pub fn max_pool(matrix: Vec<Vec<f64>>, filter_size: (usize, usize)) -> Vec<Vec<f
     _filter_fn(&matrix, filter_size, |i, j, c, d, n| {
         f64::max(n, matrix[i + c][j + d])
     })
+}
+
+pub fn flatten(matrix: &Vec<Vec<f64>>) -> Vec<f64> {
+    let mut result = vec![];
+    for i in matrix {
+        for j in i {
+            result.push(j.clone());
+        }
+    }
+
+    result
+}
+
+pub enum Transform {
+    Convolve2D(Vec<Vec<f64>>, usize),
+    MaxPool((usize, usize)),
+    Flatten(),
 }

@@ -25,3 +25,7 @@ pub fn mse(output: &Vec<f64>, expected: &Vec<f64>) -> f64 {
 
     result
 }
+
+pub trait ToVec<T> {
+    fn to_vec(self) -> Vec<T>;
+}

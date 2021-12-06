@@ -25,6 +25,14 @@ fn main() {
         vec![2.0, 0.0, 0.0, 0.0, 1.0],
     ];
     println!("{:?}", convolution::max_pool(matrix2, (3, 3)));
+
+    let input = vec![
+        1.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0,
+    ];
+    let width = 4;
+
+    // println!("{:?}", matrix);
+
     // let mut network = Network::new(vec![3, 5, 3]);
 
     // let mut rng = rand::thread_rng();
