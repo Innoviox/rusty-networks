@@ -144,8 +144,10 @@ impl Network {
         gradient
     }
 
-    pub fn add_transform(&mut self, transform: convolution::Transform) {
+    pub fn add_transform(&mut self, transform: convolution::Transform) -> &mut Self {
         self.transforms.push(transform);
+
+        self
     }
 
     fn apply_transforms(&self, input: Vec<f64>) -> Vec<f64> {
