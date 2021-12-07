@@ -66,8 +66,17 @@ impl Network {
     //     self.layers[layer_n].nodes[node_n].bias += delta;
     // }
 
-    fn train(&mut self, training_data: &Vec<Vec<f64>>, correct_output: &Vec<Vec<f64>>) {
-        for i in progress_bar_into(0..training_data.len(), training_data.len() as u64) {
+    fn train(
+        &mut self,
+        training_data: &Vec<Vec<f64>>,
+        correct_output: &Vec<Vec<f64>>,
+        epoch: usize,
+    ) {
+        for i in progress_bar_into(
+            0..training_data.len(),
+            training_data.len() as u64,
+            &format!("Epoch {}:", epoch),
+        ) {
             // println!("{}", i);
             let input = &training_data[i];
             let output = &correct_output[i];
@@ -119,13 +128,16 @@ impl Network {
         correct_output: &Vec<Vec<f64>>,
         epochs: usize,
     ) {
-        let transformed_data = progress_bar(training_data.iter(), training_data.len() as u64)
-            .map(|i| self.apply_transforms(i))
-            .collect();
+        let transformed_data = progress_bar(
+            training_data.iter(),
+            training_data.len() as u64,
+            "Convolving:",
+        )
+        .map(|i| self.apply_transforms(i))
+        .collect();
 
         for i in 0..epochs {
-            println!("Epoch {}", i + 1);
-            self.train(&transformed_data, correct_output);
+            self.train(&transformed_data, correct_output, i + 1);
         }
     }
 

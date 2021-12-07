@@ -1,7 +1,7 @@
 use rustynetworks::convolution::Transform::*;
 use rustynetworks::network::Network;
 use rustynetworks::optimizers::Adam;
-use rustynetworks::utils::{progress_bar_into, sigmoid};
+use rustynetworks::utils::{argmax, progress_bar_into, sigmoid};
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -18,7 +18,7 @@ fn _read_mnist(img_fn: &str, lab_fn: &str) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
     im_f.read(&mut [0; 16]).ok();
     lab_f.read(&mut [0; 8]).ok();
 
-    for _ in progress_bar_into(0..6000, 6000) {
+    for _ in progress_bar_into(0..6000, 6000, "MNIST:") {
         im_f.read(&mut img_buffer).ok();
         lab_f.read(&mut label_buffer).ok();
 
@@ -73,19 +73,16 @@ fn main() {
 
     let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
 
-    network.train_epochs(&train_img, &train_label, 5);
+    network.train_epochs(&train_img, &train_label, 1);
 
-    for idx in 0..500 {
-        let i = &test_img[idx];
-        for j in 0..28 {
-            for k in 0..28 {
-                print!("{}", i[j * 28 + k]);
-            }
-            println!();
+    let mut correct = 0.0;
+    for idx in 0..6000 {
+        if argmax(&test_labels[idx]) == argmax(&network.evaluate(&test_img[idx])) {
+            correct += 1.0;
         }
-        println!("{:?}", test_labels[idx]);
-        println!("{:?}", network.evaluate(i));
     }
+
+    println!("Accuracy: {}", correct / 6000.0);
 }
 
 fn _main() {
