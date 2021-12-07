@@ -41,27 +41,13 @@ pub trait ToVec<T> {
 }
 
 pub fn progress_bar<'a, T: 'a>(
-    iter: impl Iterator<Item = &'a T>,
-    len: u64,
-    pre_str: &str,
-) -> ProgressBarIter<impl Iterator<Item = &'a T>> {
-    let bar: ProgressBar =
-        ProgressBar::new(len).with_style(ProgressStyle::default_bar().template(
-            &(pre_str.to_owned() + " [{eta_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7}"),
-        ));
-
-    iter.progress_with(bar)
-}
-
-pub fn progress_bar_into<'a, T: 'a>(
     iter: impl Iterator<Item = T>,
     len: u64,
-    pre_str: &str,
+    description: &str,
 ) -> ProgressBarIter<impl Iterator<Item = T>> {
-    let bar: ProgressBar =
-        ProgressBar::new(len).with_style(ProgressStyle::default_bar().template(
-            &(pre_str.to_owned() + " [{eta_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7}"),
-        ));
+    let bar: ProgressBar = ProgressBar::new(len).with_style(ProgressStyle::default_bar().template(
+        &(description.to_owned() + " [{eta_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7}"),
+    ));
 
     iter.progress_with(bar)
 }

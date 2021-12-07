@@ -1,7 +1,7 @@
 use crate::convolution;
 use crate::optimizers;
 use crate::utils;
-use crate::utils::{dot, progress_bar, progress_bar_into};
+use crate::utils::{dot, progress_bar};
 use rand::Rng;
 use std::fmt;
 
@@ -72,7 +72,7 @@ impl Network {
         correct_output: &Vec<Vec<f64>>,
         epoch: usize,
     ) {
-        for i in progress_bar_into(
+        for i in progress_bar(
             0..training_data.len(),
             training_data.len() as u64,
             &format!("Epoch {}:", epoch),

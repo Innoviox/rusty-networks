@@ -1,7 +1,7 @@
 use rustynetworks::convolution::Transform::*;
 use rustynetworks::network::Network;
 use rustynetworks::optimizers::Adam;
-use rustynetworks::utils::{argmax, progress_bar_into, sigmoid};
+use rustynetworks::utils::{argmax, progress_bar, sigmoid};
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -18,7 +18,7 @@ fn _read_mnist(img_fn: &str, lab_fn: &str) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
     im_f.read(&mut [0; 16]).ok();
     lab_f.read(&mut [0; 8]).ok();
 
-    for _ in progress_bar_into(0..6000, 6000, "MNIST:") {
+    for _ in progress_bar(0..6000, 6000, "MNIST:") {
         im_f.read(&mut img_buffer).ok();
         lab_f.read(&mut label_buffer).ok();
 
