@@ -1,6 +1,6 @@
 use indicatif::{ProgressBar, ProgressBarIter, ProgressIterator, ProgressStyle};
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::fs;
 
 pub fn dot(input: &Vec<f64>, weights: &Vec<f64>) -> f64 {

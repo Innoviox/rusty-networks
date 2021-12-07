@@ -18,7 +18,7 @@ fn _read_mnist(img_fn: &str, lab_fn: &str, n: usize) -> (Vec<Vec<f64>>, Vec<Vec<
     im_f.read(&mut [0; 16]).ok();
     lab_f.read(&mut [0; 8]).ok();
 
-    for _ in progress_bar(0..n, n, "MNIST:") {
+    for _ in progress_bar(0..n, n as u64, "MNIST:") {
         im_f.read(&mut img_buffer).ok();
         lab_f.read(&mut label_buffer).ok();
 
@@ -76,7 +76,7 @@ fn main() {
 
     let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
 
-    network.train_epochs(&train_img, &train_label, 1);
+    network.train_epochs(&train_img, &train_label, 14);
     network.save("test.rn");
 
     let mut correct = 0.0;
@@ -84,9 +84,18 @@ fn main() {
         if argmax(&test_labels[idx]) == argmax(&network.evaluate(&test_img[idx])) {
             correct += 1.0;
         }
+
+        for j in 0..28 {
+            for k in 0..28 {
+                print!("{}", &test_img[idx][j * 28 + k]);
+            }
+            println!();
+        }
+
+        println!("{:?}", argmax(&network.evaluate(&test_img[idx])))
     }
 
-    println!("Accuracy: {}", correct / 60.0);
+    println!("Accuracy: {}", correct / 10000.0);
 }
 
 fn _main() {
