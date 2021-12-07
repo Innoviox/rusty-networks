@@ -1,4 +1,7 @@
 use indicatif::{ProgressBar, ProgressBarIter, ProgressIterator, ProgressStyle};
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
+use std::fs;
 
 pub fn dot(input: &Vec<f64>, weights: &Vec<f64>) -> f64 {
     let mut result = weights[0];
@@ -64,4 +67,14 @@ pub fn argmax(input: &Vec<f64>) -> usize {
     }
 
     idx
+}
+
+pub fn load<T: DeserializeOwned + Serialize>(file: &str) -> Option<T> {
+    match fs::read(file) {
+        Ok(b) => {
+            println!("Loaded from file {}", file);
+            Some(bincode::deserialize(&b).unwrap())
+        }
+        Err(_) => None,
+    }
 }

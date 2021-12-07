@@ -5,7 +5,7 @@ use rustynetworks::utils::{argmax, progress_bar, sigmoid};
 use std::fs::File;
 use std::io::prelude::*;
 
-fn _read_mnist(img_fn: &str, lab_fn: &str) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
+fn _read_mnist(img_fn: &str, lab_fn: &str, n: usize) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
     let mut images = vec![];
     let mut labels = vec![];
 
@@ -18,7 +18,7 @@ fn _read_mnist(img_fn: &str, lab_fn: &str) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
     im_f.read(&mut [0; 16]).ok();
     lab_f.read(&mut [0; 8]).ok();
 
-    for _ in progress_bar(0..6000, 6000, "MNIST:") {
+    for _ in progress_bar(0..n, n, "MNIST:") {
         im_f.read(&mut img_buffer).ok();
         lab_f.read(&mut label_buffer).ok();
 
@@ -45,10 +45,12 @@ fn read_mnist() -> (
         _read_mnist(
             "mnist/train-images-idx3-ubyte",
             "mnist/train-labels-idx1-ubyte",
+            60000,
         ),
         _read_mnist(
             "mnist/t10k-images-idx3-ubyte",
             "mnist/t10k-labels-idx1-ubyte",
+            10000,
         ),
     )
 }
@@ -63,6 +65,7 @@ fn main() {
     let shape = vec![625, 10];
 
     let mut network = Network::new(shape.clone());
+    // let mut network = Network::from_file("test.rn");
 
     network
         .activation(&sigmoid)
@@ -74,15 +77,16 @@ fn main() {
     let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
 
     network.train_epochs(&train_img, &train_label, 1);
+    network.save("test.rn");
 
     let mut correct = 0.0;
-    for idx in 0..6000 {
+    for idx in 0..10000 {
         if argmax(&test_labels[idx]) == argmax(&network.evaluate(&test_img[idx])) {
             correct += 1.0;
         }
     }
 
-    println!("Accuracy: {}", correct / 6000.0);
+    println!("Accuracy: {}", correct / 60.0);
 }
 
 fn _main() {

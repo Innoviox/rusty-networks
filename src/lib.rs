@@ -1,9 +1,11 @@
+extern crate bincode;
+
 pub mod convolution;
 pub mod layer;
 pub mod network;
 pub mod node;
-pub mod utils;
 pub mod optimizers;
+pub mod utils;
 
 #[cfg(test)]
 mod tests {

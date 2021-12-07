@@ -1,10 +1,12 @@
 use crate::convolution;
 use crate::optimizers;
 use crate::utils;
-use crate::utils::{dot, progress_bar};
+use crate::utils::{dot, load, progress_bar};
+use bincode::serialize_into;
 use rand::Rng;
 use std::fmt;
-
+use std::fs::File;
+use std::io::BufWriter;
 pub struct Network {
     // layers: Vec<Layer>,
     weights: Vec<Vec<Vec<f64>>>, // vector of layers of nodes of weights
@@ -43,6 +45,17 @@ impl Network {
             //	    optimizer: optimizers::GradDescent::new(),
             optimizer: optimizers::Adam::new(&shape, 0.9, 0.9, 0.99),
         }
+    }
+
+    pub fn with_weights(weights: Vec<Vec<Vec<f64>>>) -> Network {
+        let mut n = Network::new(vec![1, 1, 1]);
+        n.weights = weights;
+
+        n
+    }
+
+    pub fn from_file(filename: &str) -> Network {
+        Network::with_weights(load(filename).unwrap())
     }
 
     pub fn evaluate(&self, input: &Vec<f64>) -> Vec<f64> {
@@ -208,6 +221,11 @@ impl Network {
         }
 
         result_vec
+    }
+
+    pub fn save(&self, filename: &str) {
+        let mut f = BufWriter::new(File::create(filename).unwrap());
+        serialize_into(&mut f, &self.weights).unwrap();
     }
 }
 
