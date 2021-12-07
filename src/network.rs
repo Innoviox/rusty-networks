@@ -8,7 +8,7 @@ use std::fmt;
 pub struct Network {
     // layers: Vec<Layer>,
     weights: Vec<Vec<Vec<f64>>>, // vector of layers of nodes of weights
-    activation: Box<dyn Fn(f64) -> f64>,
+    activation: Box<&'static dyn Fn(f64) -> f64>,
     loss: Box<dyn Fn(&Vec<f64>, &Vec<f64>) -> f64>,
     transforms: Vec<convolution::Transform>,
     optimizer: Box<dyn optimizers::Optimizer>,
@@ -37,7 +37,7 @@ impl Network {
 
         Network {
             weights,
-            activation: Box::new(utils::sigmoid),
+            activation: Box::new(&utils::sigmoid),
             loss: Box::new(utils::mse),
             transforms: vec![],
             //	    optimizer: optimizers::GradDescent::new(),
@@ -138,8 +138,8 @@ impl Network {
         self
     }
 
-    pub fn activation(&mut self, act: Box<dyn Fn(f64) -> f64>) -> &mut Self {
-        self.activation = act;
+    pub fn activation(&mut self, act: &'static dyn Fn(f64) -> f64) -> &mut Self {
+        self.activation = Box::new(act);
         self
     }
 

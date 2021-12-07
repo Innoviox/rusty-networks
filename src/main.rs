@@ -1,6 +1,7 @@
 use rustynetworks::convolution::Transform::*;
 use rustynetworks::network::Network;
-use rustynetworks::utils::progress_bar_into;
+use rustynetworks::optimizers::Adam;
+use rustynetworks::utils::{progress_bar_into, sigmoid};
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -52,47 +53,6 @@ fn read_mnist() -> (
     )
 }
 
-fn over_convolute() {
-    let kernel = vec![
-        vec![1.0, 0.0, 1.0],
-        vec![0.0, 1.0, 0.0],
-        vec![1.0, 0.0, 1.0],
-    ];
-
-    let shape = vec![169, 20, 10];
-
-    let mut network = Network::new(shape);
-
-    network
-        .add_transform(Convolve2D(kernel.clone(), 28))
-        .add_transform(MaxPool((2, 2)))
-        .add_transform(Convolve2D(kernel.clone(), 25))
-        .add_transform(MaxPool((2, 2)))
-        .add_transform(Convolve2D(kernel.clone(), 22))
-        .add_transform(MaxPool((2, 2)))
-        .add_transform(Convolve2D(kernel.clone(), 19))
-        .add_transform(MaxPool((2, 2)))
-        .add_transform(Convolve2D(kernel.clone(), 16))
-        .add_transform(MaxPool((2, 2)))
-        .add_transform(Flatten());
-
-    let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
-
-    network.train_epochs(&train_img, &train_label, 5);
-
-    for idx in 0..500 {
-        let i = &test_img[idx];
-        for j in 0..28 {
-            for k in 0..28 {
-                print!("{}", i[j * 28 + k]);
-            }
-            println!();
-        }
-        println!("{:?}", test_labels[idx]);
-        println!("{:?}", network.evaluate(i));
-    }
-}
-
 fn main() {
     let kernel = vec![
         vec![1.0, 0.0, 1.0],
@@ -102,19 +62,13 @@ fn main() {
 
     let shape = vec![625, 10];
 
-    let mut network = Network::new(shape);
+    let mut network = Network::new(shape.clone());
 
     network
+        .activation(&sigmoid)
+        .optimizer(Adam::new(&shape.clone(), 0.9, 0.9, 0.99))
         .add_transform(Convolve2D(kernel.clone(), 28))
         .add_transform(MaxPool((2, 2)))
-        // .add_transform(Convolve2D(kernel.clone(), 25))
-        // .add_transform(MaxPool((2, 2)))
-        // .add_transform(Convolve2D(kernel.clone(), 22))
-        // .add_transform(MaxPool((2, 2)))
-        // .add_transform(Convolve2D(kernel.clone(), 19))
-        // .add_transform(MaxPool((2, 2)))
-        // .add_transform(Convolve2D(kernel.clone(), 16))
-        // .add_transform(MaxPool((2, 2)))
         .add_transform(Flatten());
 
     let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
@@ -137,7 +91,7 @@ fn main() {
 fn _main() {
     let mut network = Network::new(vec![3, 50, 3]);
 
-    let rng = rand::thread_rng();
+    let _rng = rand::thread_rng();
     let mut training_input = vec![];
     let mut training_output = vec![];
 
