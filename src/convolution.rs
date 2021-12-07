@@ -27,9 +27,19 @@ where
 }
 
 pub fn convolve(matrix: Vec<Vec<f64>>, kernel: Vec<Vec<f64>>) -> Vec<Vec<f64>> {
-    _filter_fn(&matrix, (kernel.len(), kernel[0].len()), |i, j, c, d, n| {
+    let result = _filter_fn(&matrix, (kernel.len(), kernel[0].len()), |i, j, c, d, n| {
         n + matrix[i + c][j + d] * kernel[c][d]
-    })
+    });
+
+    let max = result
+        .iter()
+        .map(|i| i.iter().cloned().fold(0.0, f64::max))
+        .fold(0.0, f64::max);
+
+    result
+        .iter()
+        .map(|i| i.iter().map(|i| i / max).collect())
+        .collect()
 }
 
 pub fn max_pool(matrix: Vec<Vec<f64>>, filter_size: (usize, usize)) -> Vec<Vec<f64>> {

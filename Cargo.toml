@@ -9,3 +9,7 @@ edition = "2021"
 ndarray = "0.15.0"
 rand = "0.8.4"
 indicatif = {version = "*", features = ["rayon"]}
+
+[[bin]]
+name = "main"
+path = "src/main.rs"

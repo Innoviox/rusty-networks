@@ -1,15 +1,13 @@
 use crate::convolution;
-use crate::layer::Layer;
-use crate::node::Node;
 use crate::optimizers;
 use crate::utils;
-use crate::utils::{progress_bar, progress_bar_into};
-use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
+use crate::utils::{dot, progress_bar, progress_bar_into};
 use rand::Rng;
 use std::fmt;
 
 pub struct Network {
-    layers: Vec<Layer>,
+    // layers: Vec<Layer>,
+    weights: Vec<Vec<Vec<f64>>>, // vector of layers of nodes of weights
     activation: Box<dyn Fn(f64) -> f64>,
     loss: Box<dyn Fn(&Vec<f64>, &Vec<f64>) -> f64>,
     transforms: Vec<convolution::Transform>,
@@ -21,47 +19,47 @@ impl Network {
         // shape is number of nodes in each layer
         let mut rng = rand::thread_rng();
 
-        let mut layers = vec![];
+        let mut weights = vec![];
         let mut last_length = shape[0];
         for l in shape.iter().skip(1) {
             // skip first layer
             let mut nodes = vec![];
             for _i in 0..*l {
-                let n = Node {
-                    weights: (0..last_length + 1) // +1 cause bias
-                        .map(|_| rng.gen_range(0.0..1.0))
+                nodes.push(
+                    (0..last_length + 1) // +1 cause bias
+                        .map(|_| rng.gen_range(-1.0..1.0))
                         .collect(),
-                    // bias: rng.gen_range(0.0..1.0),
-                    value: 0,
-                };
-                nodes.push(n);
+                );
             }
-            layers.push(Layer { nodes });
+            weights.push(nodes);
             last_length = *l;
         }
 
         Network {
-            layers,
-	    //            activation: Box::new(utils::sigmoid),
-	    activation: Box::new(utils::relu),
+            weights,
+            activation: Box::new(utils::sigmoid),
             loss: Box::new(utils::mse),
             transforms: vec![],
-//	    optimizer: optimizers::GradDescent::new(),
-	    optimizer: optimizers::Adam::new(&shape, 0.9, 0.9, 0.99),
+            //	    optimizer: optimizers::GradDescent::new(),
+            optimizer: optimizers::Adam::new(&shape, 0.9, 0.9, 0.99),
         }
     }
 
     pub fn evaluate(&self, input: &Vec<f64>) -> Vec<f64> {
         let mut values: Vec<f64> = input.to_vec();
-        for layer in &self.layers {
-            values = layer.evaluate(&values, &self.activation);
+        for layer in &self.weights {
+            // values = layer.evaluate(&values, &self.activation);
+            values = layer
+                .iter()
+                .map(|node| (self.activation)(dot(&values, node)))
+                .collect();
         }
 
         values
     }
 
     fn change_weight(&mut self, layer_n: usize, node_n: usize, weight_n: usize, delta: f64) {
-        self.layers[layer_n].nodes[node_n].weights[weight_n] += delta;
+        self.weights[layer_n][node_n][weight_n] += delta;
     }
 
     // fn change_bias(&mut self, layer_n: usize, node_n: usize, delta: f64) {
@@ -69,8 +67,8 @@ impl Network {
     // }
 
     fn train(&mut self, training_data: &Vec<Vec<f64>>, correct_output: &Vec<Vec<f64>>) {
-        for i in progress_bar_into(0..training_data.len()) {
-            // tqdm_rs::write(&format!("training {}", i));
+        for i in progress_bar_into(0..training_data.len(), training_data.len() as u64) {
+            // println!("{}", i);
             let input = &training_data[i];
             let output = &correct_output[i];
 
@@ -79,9 +77,9 @@ impl Network {
 
             let mut gradient = self.make_weights_grid();
 
-            for layer_n in 0..self.layers.len() {
-                for node_n in 0..self.layers[layer_n].nodes.len() {
-                    for weight_n in 0..self.layers[layer_n].nodes[node_n].weights.len() {
+            for layer_n in 0..self.weights.len() {
+                for node_n in 0..self.weights[layer_n].len() {
+                    for weight_n in 0..self.weights[layer_n][node_n].len() {
                         self.change_weight(layer_n, node_n, weight_n, 0.01);
 
                         let new_loss = (self.loss)(&(self.evaluate(input)), output);
@@ -94,7 +92,7 @@ impl Network {
                 }
             }
 
-	    let dw = self.optimizer.optimize(&gradient);
+            let dw = self.optimizer.optimize(&gradient);
 
             for layer_n in 0..dw.len() {
                 for node_n in 0..dw[layer_n].len() {
@@ -121,11 +119,12 @@ impl Network {
         correct_output: &Vec<Vec<f64>>,
         epochs: usize,
     ) {
-        let transformed_data = progress_bar(training_data.iter())
-            .map(|i| self.apply_transforms(i.to_vec()))
+        let transformed_data = progress_bar(training_data.iter(), training_data.len() as u64)
+            .map(|i| self.apply_transforms(i))
             .collect();
 
-        for _i in 0..epochs {
+        for i in 0..epochs {
+            println!("Epoch {}", i + 1);
             self.train(&transformed_data, correct_output);
         }
     }
@@ -134,18 +133,24 @@ impl Network {
     //     unimplemented!();
     // }
 
-    pub fn set_optimizer_function() {
-        unimplemented!();
+    pub fn optimizer(&mut self, opt: Box<dyn optimizers::Optimizer>) -> &mut Self {
+        self.optimizer = opt;
+        self
+    }
+
+    pub fn activation(&mut self, act: Box<dyn Fn(f64) -> f64>) -> &mut Self {
+        self.activation = act;
+        self
     }
 
     pub fn make_weights_grid(&self) -> Vec<Vec<Vec<f64>>> {
         let mut gradient = vec![];
 
-        for layer_n in 0..self.layers.len() {
+        for layer_n in 0..self.weights.len() {
             let mut layer_gradient = vec![];
-            for node_n in 0..self.layers[layer_n].nodes.len() {
+            for node_n in 0..self.weights[layer_n].len() {
                 let mut neuron_gradient = vec![];
-                for _weight_n in 0..self.layers[layer_n].nodes[node_n].weights.len() {
+                for _weight_n in 0..self.weights[layer_n][node_n].len() {
                     neuron_gradient.push(0.0f64);
                 }
 
@@ -160,11 +165,10 @@ impl Network {
 
     pub fn add_transform(&mut self, transform: convolution::Transform) -> &mut Self {
         self.transforms.push(transform);
-
         self
     }
 
-    fn apply_transforms(&self, input: Vec<f64>) -> Vec<f64> {
+    pub fn apply_transforms(&self, input: &Vec<f64>) -> Vec<f64> {
         let mut matrix2d = vec![];
         let mut result_vec = input.clone();
         for t in &self.transforms {

@@ -1,5 +1,4 @@
 use indicatif::{ProgressBar, ProgressBarIter, ProgressIterator, ProgressStyle};
-use ndarray::iter::Iter;
 
 pub fn dot(input: &Vec<f64>, weights: &Vec<f64>) -> f64 {
     let mut result = weights[0];
@@ -43,8 +42,9 @@ pub trait ToVec<T> {
 
 pub fn progress_bar<'a, T: 'a>(
     iter: impl Iterator<Item = &'a T>,
+    len: u64,
 ) -> ProgressBarIter<impl Iterator<Item = &'a T>> {
-    let bar: ProgressBar = ProgressBar::new(6000).with_style(
+    let bar: ProgressBar = ProgressBar::new(len).with_style(
         ProgressStyle::default_bar()
             .template("[{eta_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7}"),
     );
@@ -54,8 +54,9 @@ pub fn progress_bar<'a, T: 'a>(
 
 pub fn progress_bar_into<'a, T: 'a>(
     iter: impl Iterator<Item = T>,
+    len: u64,
 ) -> ProgressBarIter<impl Iterator<Item = T>> {
-    let bar: ProgressBar = ProgressBar::new(6000).with_style(
+    let bar: ProgressBar = ProgressBar::new(len).with_style(
         ProgressStyle::default_bar()
             .template("[{eta_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7}"),
     );
