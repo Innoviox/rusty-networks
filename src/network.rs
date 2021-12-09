@@ -18,20 +18,21 @@ pub struct Network {
 }
 
 impl Network {
-    pub fn new() -> Network {
+    pub fn default() -> Network {
         Network {
             weights: vec![],
             activation: Box::new(vec![]),
-            loss: Box::new(&utils::mse),
+            loss: Box::new(&utils::categorical_cross_entropy),
             transforms: vec![],
             optimizer: optimizers::GradDescent::new(),
+            // optimizer: optimizers::Adam::new(&vec![625, 10, 10], 0.01, 0.9, 0.99),
             // optimizer: optimizers::Adam::new(&shape, 0.9, 0.9, 0.99),
             shape: vec![],
         }
     }
 
     pub fn with_weights(weights: Vec<Vec<Vec<f64>>>) -> Network {
-        let mut n = Network::new();
+        let mut n = Network::default();
         n.weights = weights;
 
         n
@@ -47,12 +48,18 @@ impl Network {
         activation: &'static dyn Fn(Vec<f64>) -> Vec<f64>,
     ) -> &mut Self {
         self.shape.push(n);
-        self.activation.push(activation);
+        if self.shape.len() > 1 {
+            self.activation.push(activation);
+        }
 
         self
     }
 
-    pub fn evaluate(&self, input: &Vec<f64>) -> Vec<f64> {
+    pub fn predict(&self, input: &Vec<f64>) -> Vec<f64> {
+        self.evaluate(&self.apply_transforms(input))
+    }
+
+    fn evaluate(&self, input: &Vec<f64>) -> Vec<f64> {
         let mut values: Vec<f64> = input.to_vec();
         for layer_n in 0..self.weights.len() {
             values = (self.activation[layer_n])(
@@ -100,14 +107,14 @@ impl Network {
             for layer_n in 0..self.weights.len() {
                 for node_n in 0..self.weights[layer_n].len() {
                     for weight_n in 0..self.weights[layer_n][node_n].len() {
-                        self.change_weight(layer_n, node_n, weight_n, 0.01);
+                        self.weights[layer_n][node_n][weight_n] += 0.01;
 
                         let new_loss = (self.loss)(&(self.evaluate(input)), output);
                         let del = (new_loss - base_loss) / 0.01;
 
                         gradient[layer_n][node_n][weight_n] = del;
 
-                        self.change_weight(layer_n, node_n, weight_n, -0.01);
+                        self.weights[layer_n][node_n][weight_n] -= 0.01;
                     }
                 }
             }
@@ -117,12 +124,7 @@ impl Network {
             for layer_n in 0..dw.len() {
                 for node_n in 0..dw[layer_n].len() {
                     for weight_n in 0..dw[layer_n][node_n].len() {
-                        self.change_weight(
-                            layer_n,
-                            node_n,
-                            weight_n,
-                            dw[layer_n][node_n][weight_n],
-                        );
+                        self.weights[layer_n][node_n][weight_n] += dw[layer_n][node_n][weight_n];
                     }
                 }
             }

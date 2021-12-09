@@ -26,7 +26,7 @@ fn _read_mnist(img_fn: &str, lab_fn: &str, n: usize) -> (Vec<Vec<f64>>, Vec<Vec<
 
         let mut image = vec![];
         for i in img_buffer {
-            image.push(if i > 127 { 1.0 } else { 0.0 });
+            image.push(i as f64 / 255.0);
         }
 
         let mut label = vec![0.0; 10];
@@ -47,7 +47,7 @@ fn read_mnist() -> (
         _read_mnist(
             "mnist/train-images-idx3-ubyte",
             "mnist/train-labels-idx1-ubyte",
-            600,
+            60,
         ),
         _read_mnist(
             "mnist/t10k-images-idx3-ubyte",
@@ -66,53 +66,80 @@ fn main() {
 }
 
 fn test_mnist() {
+    let n = 10000;
+    // let kernel = vec![
+    //     vec![-1.0, -1.0, -1.0],
+    //     vec![-1.0, 8.0, -1.0],
+    //     vec![-1.0, -1.0, -1.0],
+    // ];
     let kernel = vec![
-        vec![-1.0, -1.0, -1.0],
-        vec![-1.0, 8.0, -1.0],
-        vec![-1.0, -1.0, -1.0],
+        vec![1.0, 0.0, 1.0],
+        vec![0.0, 1.0, 0.0],
+        vec![1.0, 0.0, 1.0],
     ];
+    // let kernel = vec![
+    //     vec![0.0, -1.0, 0.0],
+    //     vec![-1.0, 5.0, -1.0],
+    //     vec![0.0, -1.0, 0.0],
+    // ];
 
-    let shape = vec![625, 32, 10];
-
-    let mut network = Network::new();
-    // let mut network = Network::from_file("softmax.rn");
+    let mut network = Network::default();
+    // let mut network = Network::from_file("50acc.rn");
 
     network
         .add_layer(625, &sigmoid)
-        .add_layer(32, &sigmoid)
+        .add_layer(30, &sigmoid)
         .add_layer(10, &softmax)
         .loss(&categorical_cross_entropy)
-        .optimizer(Adam::new(&shape.clone(), 0.001, 0.9, 0.999))
+        // .optimizer(Adam::new(&vec![625, 50, 10], 0.01, 0.9, 0.99))
+        .optimizer(GradDescent::new())
         .add_transform(Convolve2D(kernel.clone(), 28))
         .add_transform(MaxPool((2, 2)))
+        // .add_transform(Convolve2D(kernel.clone(), 25))
+        // .add_transform(MaxPool((2, 2)))
+        // .add_transform(Convolve2D(kernel.clone(), 22))
+        // .add_transform(MaxPool((2, 2)))
         .add_transform(Flatten());
 
     let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
 
-    network.train_epochs(&train_img, &train_label, 5);
-    network.save("softmax10.rn");
+    network.train_epochs(&train_img, &train_label, 10);
+    network.save("625-30-10-grad-1conv-xkern.rn");
 
     let mut correct = 0.0;
-    for idx in 0..10000 {
-        if argmax(&test_labels[idx]) == argmax(&network.evaluate(&test_img[idx])) {
+    for idx in 0..n {
+        let eval = &network.predict(&test_img[idx]);
+        if argmax(&test_labels[idx]) == argmax(eval) {
             correct += 1.0;
+
+            // for j in 0..28 {
+            //     for k in 0..28 {
+            //         print!(
+            //             "{}",
+            //             if test_img[idx][j * 28 + k] > 0.5 {
+            //                 1
+            //             } else {
+            //                 0
+            //             }
+            //         );
+            //     }
+            //     if j < 10 {
+            //         let n = (100.0 * eval[j]) as usize;
+
+            //         print!(" {:?} {}", j, n);
+            //     }
+            //     println!();
+            // }
         }
 
-        for j in 0..28 {
-            for k in 0..28 {
-                print!("{}", &test_img[idx][j * 28 + k]);
-            }
-            println!();
-        }
-
-        println!(
-            "{:?} {:?}",
-            &network.evaluate(&test_img[idx]),
-            argmax(&network.evaluate(&test_img[idx]))
-        );
+        // println!(
+        //     "{:?} {:?}",
+        //     &network.evaluate(&network.apply_transforms(&test_img[idx])),
+        //     argmax(&network.evaluate(&network.apply_transforms(&test_img[idx])))
+        // );
     }
 
-    println!("Accuracy: {}", correct / 10000.0);
+    println!("Accuracy: {}", correct / n as f64);
 }
 
 // fn _main() {
@@ -156,3 +183,4 @@ fn test_mnist() {
 //         println!("input: {:?} evaluation: {:?}", l, network.evaluate(&k),);
 //     }
 // }
+//

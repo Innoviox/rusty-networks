@@ -47,7 +47,10 @@ pub fn mse(output: &Vec<f64>, expected: &Vec<f64>) -> f64 {
 }
 
 pub fn categorical_cross_entropy(output: &Vec<f64>, expected: &Vec<f64>) -> f64 {
-    -output[argmax(expected)].log10()
+    // -output[argmax(expected)].log10()
+    let p = output[argmax(expected)];
+    // -(p.log10() + (1.0 - p).log10())
+    -p.log10()
 }
 
 pub trait ToVec<T> {
