@@ -1,7 +1,7 @@
 use crate::convolution;
 use crate::optimizers;
 use crate::utils;
-use crate::utils::{dot, load, progress_bar};
+use crate::utils::{dot, load, progress_bar, softmax};
 use bincode::serialize_into;
 use rand::Rng;
 use std::fmt;
@@ -10,45 +10,28 @@ use std::io::BufWriter;
 pub struct Network {
     // layers: Vec<Layer>,
     weights: Vec<Vec<Vec<f64>>>, // vector of layers of nodes of weights
-    activation: Box<&'static dyn Fn(f64) -> f64>,
-    loss: Box<dyn Fn(&Vec<f64>, &Vec<f64>) -> f64>,
+    activation: Box<Vec<&'static dyn Fn(Vec<f64>) -> Vec<f64>>>,
+    loss: Box<&'static dyn Fn(&Vec<f64>, &Vec<f64>) -> f64>,
     transforms: Vec<convolution::Transform>,
     optimizer: Box<dyn optimizers::Optimizer>,
+    shape: Vec<u64>,
 }
 
 impl Network {
-    pub fn new(shape: Vec<u64>) -> Network {
-        // shape is number of nodes in each layer
-        let mut rng = rand::thread_rng();
-
-        let mut weights = vec![];
-        let mut last_length = shape[0];
-        for l in shape.iter().skip(1) {
-            // skip first layer
-            let mut nodes = vec![];
-            for _i in 0..*l {
-                nodes.push(
-                    (0..last_length + 1) // +1 cause bias
-                        .map(|_| rng.gen_range(-1.0..1.0))
-                        .collect(),
-                );
-            }
-            weights.push(nodes);
-            last_length = *l;
-        }
-
+    pub fn new() -> Network {
         Network {
-            weights,
-            activation: Box::new(&utils::sigmoid),
-            loss: Box::new(utils::mse),
+            weights: vec![],
+            activation: Box::new(vec![]),
+            loss: Box::new(&utils::mse),
             transforms: vec![],
-            //	    optimizer: optimizers::GradDescent::new(),
-            optimizer: optimizers::Adam::new(&shape, 0.9, 0.9, 0.99),
+            optimizer: optimizers::GradDescent::new(),
+            // optimizer: optimizers::Adam::new(&shape, 0.9, 0.9, 0.99),
+            shape: vec![],
         }
     }
 
     pub fn with_weights(weights: Vec<Vec<Vec<f64>>>) -> Network {
-        let mut n = Network::new(vec![1, 1, 1]);
+        let mut n = Network::new();
         n.weights = weights;
 
         n
@@ -58,14 +41,26 @@ impl Network {
         Network::with_weights(load(filename).unwrap())
     }
 
+    pub fn add_layer(
+        &mut self,
+        n: u64,
+        activation: &'static dyn Fn(Vec<f64>) -> Vec<f64>,
+    ) -> &mut Self {
+        self.shape.push(n);
+        self.activation.push(activation);
+
+        self
+    }
+
     pub fn evaluate(&self, input: &Vec<f64>) -> Vec<f64> {
         let mut values: Vec<f64> = input.to_vec();
-        for layer in &self.weights {
-            // values = layer.evaluate(&values, &self.activation);
-            values = layer
-                .iter()
-                .map(|node| (self.activation)(dot(&values, node)))
-                .collect();
+        for layer_n in 0..self.weights.len() {
+            values = (self.activation[layer_n])(
+                self.weights[layer_n]
+                    .iter()
+                    .map(|node| dot(&values, node))
+                    .collect(),
+            );
         }
 
         values
@@ -85,17 +80,20 @@ impl Network {
         correct_output: &Vec<Vec<f64>>,
         epoch: usize,
     ) {
+        let mut sum_loss = 0.0;
         for i in progress_bar(
             0..training_data.len(),
             training_data.len() as u64,
             &format!("Epoch {}:", epoch),
         ) {
+            // for i in 0..training_data.len() {
             // println!("{}", i);
             let input = &training_data[i];
             let output = &correct_output[i];
 
             let result = self.evaluate(input);
             let base_loss = (self.loss)(&result, output);
+            sum_loss += base_loss.abs();
 
             let mut gradient = self.make_weights_grid();
 
@@ -129,10 +127,13 @@ impl Network {
                 }
             }
 
+            // println!("hi {:?} {:?}", result, base_loss);
+
             // todo: store bias in weights array of neuron
             // todo: store previous delta, use node[weight_index] += (rate * weight_update) + (momentum * prev_delta);
             // todo: halt condition
         }
+        println!("Loss: {}", sum_loss / (training_data.len() as f64));
     }
 
     pub fn train_epochs(
@@ -141,6 +142,26 @@ impl Network {
         correct_output: &Vec<Vec<f64>>,
         epochs: usize,
     ) {
+        // set up weights
+        // shape is number of nodes in each layer
+        let mut rng = rand::thread_rng();
+
+        self.weights = vec![];
+        let mut last_length = self.shape[0];
+        for l in self.shape.iter().skip(1) {
+            // skip first layer
+            let mut nodes = vec![];
+            for _i in 0..*l {
+                nodes.push(
+                    (0..last_length + 1) // +1 cause bias
+                        .map(|_| rng.gen_range(-1.0..1.0))
+                        .collect(),
+                );
+            }
+            self.weights.push(nodes);
+            last_length = *l;
+        }
+
         let transformed_data = progress_bar(
             training_data.iter(),
             training_data.len() as u64,
@@ -163,8 +184,13 @@ impl Network {
         self
     }
 
-    pub fn activation(&mut self, act: &'static dyn Fn(f64) -> f64) -> &mut Self {
-        self.activation = Box::new(act);
+    // pub fn activation(&mut self, act: &'static dyn Fn(f64) -> f64) -> &mut Self {
+    //     self.activation = Box::new(act);
+    //     self
+    // }
+
+    pub fn loss(&mut self, loss: &'static dyn Fn(&Vec<f64>, &Vec<f64>) -> f64) -> &mut Self {
+        self.loss = Box::new(loss);
         self
     }
 

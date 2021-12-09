@@ -27,19 +27,45 @@ where
 }
 
 pub fn convolve(matrix: Vec<Vec<f64>>, kernel: Vec<Vec<f64>>) -> Vec<Vec<f64>> {
-    let result = _filter_fn(&matrix, (kernel.len(), kernel[0].len()), |i, j, c, d, n| {
+    let mut result = _filter_fn(&matrix, (kernel.len(), kernel[0].len()), |i, j, c, d, n| {
         n + matrix[i + c][j + d] * kernel[c][d]
     });
+
+    // for j in 0..26 {
+    //     for k in 0..26 {
+    //         print!("{}", if result[j][k] > 0.3 { 1.0 } else { 0.0 });
+    //     }
+    //     println!();
+    // }
+
+    let min = result
+        .iter()
+        .map(|i| i.iter().cloned().fold(0.0, f64::min))
+        .fold(0.0, f64::min);
+
+    result = result
+        .iter()
+        .map(|i| i.iter().map(|i| i - min).collect())
+        .collect();
 
     let max = result
         .iter()
         .map(|i| i.iter().cloned().fold(0.0, f64::max))
         .fold(0.0, f64::max);
 
-    result
+    result = result
         .iter()
         .map(|i| i.iter().map(|i| i / max).collect())
-        .collect()
+        .collect();
+
+    // for j in 0..26 {
+    //     for k in 0..26 {
+    //         print!("{}", if result[j][k] > 0.3 { 1.0 } else { 0.0 });
+    //     }
+    //     println!();
+    // }
+
+    result
 }
 
 pub fn max_pool(matrix: Vec<Vec<f64>>, filter_size: (usize, usize)) -> Vec<Vec<f64>> {

@@ -126,7 +126,7 @@ impl Optimizer for Adam {
                     vhat = temp_v / (1f64 - b2);
                     m[layer_n][node_n].push(temp_m);
                     v[layer_n][node_n].push(temp_v);
-                    w[layer_n][node_n].push(-a * mhat / (vhat.sqrt() + 0.000001));
+                    w[layer_n][node_n].push(-a * mhat / (vhat.sqrt() + 0.00000001));
                 }
             }
         }

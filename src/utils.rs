@@ -1,6 +1,7 @@
 use indicatif::{ProgressBar, ProgressBarIter, ProgressIterator, ProgressStyle};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use std::f64::consts::E;
 use std::fs;
 
 pub fn dot(input: &Vec<f64>, weights: &Vec<f64>) -> f64 {
@@ -14,16 +15,22 @@ pub fn dot(input: &Vec<f64>, weights: &Vec<f64>) -> f64 {
 
 // type func = Box<dyn Fn(f64) -> f64>; // might make things look nicer idk
 
-pub fn sigmoid(x: f64) -> f64 {
-    1.0 / (1.0 + (-x).exp())
+pub fn sigmoid(x: Vec<f64>) -> Vec<f64> {
+    x.iter().map(|i| 1.0 / (1.0 + (-i).exp())).collect()
 }
 
-pub fn relu(x: f64) -> f64 {
-    if x > 0.0 {
-        x
-    } else {
-        0.0
+pub fn relu(x: Vec<f64>) -> Vec<f64> {
+    x.iter().map(|i| if *i > 0.0 { *i } else { 0.0 }).collect()
+}
+
+pub fn softmax(x: Vec<f64>) -> Vec<f64> {
+    let mut result = vec![];
+    let y: Vec<f64> = x.iter().cloned().collect();
+    let sum = y.iter().fold(0.0, |a, b| a + E.powf(*b));
+    for j in y {
+        result.push(E.powf(j) / sum);
     }
+    result
 }
 
 // mean squared error: (actually total squared error):
@@ -37,6 +44,10 @@ pub fn mse(output: &Vec<f64>, expected: &Vec<f64>) -> f64 {
     }
 
     result
+}
+
+pub fn categorical_cross_entropy(output: &Vec<f64>, expected: &Vec<f64>) -> f64 {
+    -output[argmax(expected)].log10()
 }
 
 pub trait ToVec<T> {
