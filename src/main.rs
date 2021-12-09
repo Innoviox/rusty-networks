@@ -47,7 +47,7 @@ fn read_mnist() -> (
         _read_mnist(
             "mnist/train-images-idx3-ubyte",
             "mnist/train-labels-idx1-ubyte",
-            10000,
+            50,
         ),
         _read_mnist(
             "mnist/t10k-images-idx3-ubyte",
@@ -84,7 +84,7 @@ fn test_mnist() {
        // ]; // blur
 
     // let mut network = Network::default();
-    let mut network = Network::from_file("neurals/81acc.rn");
+    let mut network = Network::from_file("neurals/85acc.rn");
 
     network
         .add_layer(625, &sigmoid)
@@ -92,7 +92,7 @@ fn test_mnist() {
         .add_layer(10, &softmax)
         .loss(&categorical_cross_entropy)
         .optimizer(Adam::new(0.01, 0.9, 0.99))
-        .optimizer(GradDescent::new())
+        // .optimizer(GradDescent::new())
         .add_transform(Convolve2D(kernel.clone(), 28))
         .add_transform(MaxPool((2, 2)))
         // .add_transform(Convolve2D(kernel.clone(), 25))
@@ -103,8 +103,8 @@ fn test_mnist() {
 
     let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
 
-    network.train_epochs(&train_img, &train_label, 2);
-    network.save("neurals/81acc-2epochs.rn");
+    network.train_epochs(&train_img, &train_label, 1);
+    network.save("neurals/85acc-1epoch.rn");
 
     let mut correct = 0.0;
     for idx in 0..n {
