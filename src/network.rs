@@ -1,7 +1,7 @@
 use crate::convolution;
 use crate::optimizers;
 use crate::utils;
-use crate::utils::{dot, load, progress_bar, softmax};
+use crate::utils::{dot, load, progress_bar};
 use bincode::serialize_into;
 use rand::Rng;
 use std::fmt;
@@ -73,9 +73,9 @@ impl Network {
         values
     }
 
-    fn change_weight(&mut self, layer_n: usize, node_n: usize, weight_n: usize, delta: f64) {
-        self.weights[layer_n][node_n][weight_n] += delta;
-    }
+    // fn change_weight(&mut self, layer_n: usize, node_n: usize, weight_n: usize, delta: f64) {
+    //     self.weights[layer_n][node_n][weight_n] += delta;
+    // }
 
     // fn change_bias(&mut self, layer_n: usize, node_n: usize, delta: f64) {
     //     self.layers[layer_n].nodes[node_n].bias += delta;
@@ -144,8 +144,26 @@ impl Network {
         correct_output: &Vec<Vec<f64>>,
         epochs: usize,
     ) {
-        // set up weights
-        // shape is number of nodes in each layer
+        self.set_up_weights();
+
+        let transformed_data = progress_bar(
+            training_data.iter(),
+            training_data.len() as u64,
+            "Convolving:",
+        )
+        .map(|i| self.apply_transforms(i))
+        .collect();
+
+        for i in 0..epochs {
+            self.train(&transformed_data, correct_output, i + 1);
+        }
+    }
+
+    fn set_up_weights(&mut self) {
+        if self.weights.len() > 0 {
+            return;
+        }
+
         let mut rng = rand::thread_rng();
 
         self.weights = vec![];
@@ -162,18 +180,6 @@ impl Network {
             }
             self.weights.push(nodes);
             last_length = *l;
-        }
-
-        let transformed_data = progress_bar(
-            training_data.iter(),
-            training_data.len() as u64,
-            "Convolving:",
-        )
-        .map(|i| self.apply_transforms(i))
-        .collect();
-
-        for i in 0..epochs {
-            self.train(&transformed_data, correct_output, i + 1);
         }
     }
 

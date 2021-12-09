@@ -83,8 +83,8 @@ fn test_mnist() {
     //     vec![0.0, -1.0, 0.0],
     // ];
 
-    let mut network = Network::default();
-    // let mut network = Network::from_file("50acc.rn");
+    // let mut network = Network::default();
+    let mut network = Network::from_file("neurals/81acc.rn");
 
     network
         .add_layer(625, &sigmoid)
@@ -103,8 +103,8 @@ fn test_mnist() {
 
     let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
 
-    network.train_epochs(&train_img, &train_label, 10);
-    network.save("625-30-10-grad-1conv-xkern.rn");
+    network.train_epochs(&train_img, &train_label, 2);
+    network.save("neurals/81acc-2epochs.rn");
 
     let mut correct = 0.0;
     for idx in 0..n {
