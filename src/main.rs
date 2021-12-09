@@ -47,7 +47,7 @@ fn read_mnist() -> (
         _read_mnist(
             "mnist/train-images-idx3-ubyte",
             "mnist/train-labels-idx1-ubyte",
-            60,
+            10000,
         ),
         _read_mnist(
             "mnist/t10k-images-idx3-ubyte",
