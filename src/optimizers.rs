@@ -1,5 +1,6 @@
 pub trait Optimizer {
     fn optimize(&mut self, gradient: &Vec<Vec<Vec<f64>>>) -> Vec<Vec<Vec<f64>>>;
+    fn with_shape(&mut self, shape: &Vec<u64>);
 }
 
 pub struct GradDescent {}
@@ -24,6 +25,8 @@ impl Optimizer for GradDescent {
         }
         dg
     }
+
+    fn with_shape(&mut self, shape: &Vec<u64>) {}
 }
 
 #[derive(Debug)]
@@ -54,24 +57,11 @@ impl Adam {
         self.alpha * (1f64 - self.beta2).sqrt() / (1f64 - self.beta1)
     }
 
-    pub fn new(shape: &Vec<u64>, alpha: f64, start_beta1: f64, start_beta2: f64) -> Box<Adam> {
-        let mut old_m = Vec::new();
-        let mut old_v = Vec::new();
+    pub fn new(alpha: f64, start_beta1: f64, start_beta2: f64) -> Box<Adam> {
+        let old_m = Vec::new();
+        let old_v = Vec::new();
 
-        for (i, layer_n) in shape.iter().skip(1).enumerate() {
-            old_m.push(Vec::new());
-            old_v.push(Vec::new());
-            for node_n in 0..layer_n.clone() as usize {
-                old_m[i].push(Vec::new());
-                old_v[i].push(Vec::new());
-                for _weight_n in 0..shape[i] + 1 {
-                    old_m[i][node_n as usize].push(0.0);
-                    old_v[i][node_n as usize].push(0.0);
-                }
-            }
-        }
-
-        let mut a = Adam {
+        let a = Adam {
             alpha,
             beta1: 0.0,
             beta2: 0.0,
@@ -81,20 +71,38 @@ impl Adam {
             old_v,
         };
 
-        for layer_n in 0..a.old_m.len() {
-            for node_n in 0..a.old_m[layer_n].len() {
-                for weight_n in 0..a.old_m[layer_n][node_n].len() {
-                    a.old_m[layer_n][node_n][weight_n] = 0.0;
-                    a.old_v[layer_n][node_n][weight_n] = 0.0;
-                }
-            }
-        }
-
         Box::new(a)
     }
 }
 
 impl Optimizer for Adam {
+    fn with_shape(&mut self, shape: &Vec<u64>) {
+        self.old_m = Vec::new();
+        self.old_v = Vec::new();
+
+        for (i, layer_n) in shape.iter().skip(1).enumerate() {
+            self.old_m.push(Vec::new());
+            self.old_v.push(Vec::new());
+            for node_n in 0..layer_n.clone() as usize {
+                self.old_m[i].push(Vec::new());
+                self.old_v[i].push(Vec::new());
+                for _weight_n in 0..shape[i] + 1 {
+                    self.old_m[i][node_n as usize].push(0.0);
+                    self.old_v[i][node_n as usize].push(0.0);
+                }
+            }
+        }
+
+        for layer_n in 0..self.old_m.len() {
+            for node_n in 0..self.old_m[layer_n].len() {
+                for weight_n in 0..self.old_m[layer_n][node_n].len() {
+                    self.old_m[layer_n][node_n][weight_n] = 0.0;
+                    self.old_v[layer_n][node_n][weight_n] = 0.0;
+                }
+            }
+        }
+    }
+
     fn optimize(&mut self, gradient: &Vec<Vec<Vec<f64>>>) -> Vec<Vec<Vec<f64>>> {
         let b1 = self.beta1();
         let b2 = self.beta2();

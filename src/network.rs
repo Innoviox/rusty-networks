@@ -145,6 +145,7 @@ impl Network {
         epochs: usize,
     ) {
         self.set_up_weights();
+        self.optimizer.with_shape(&self.shape);
 
         let transformed_data = progress_bar(
             training_data.iter(),

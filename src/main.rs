@@ -71,17 +71,17 @@ fn test_mnist() {
     //     vec![-1.0, -1.0, -1.0],
     //     vec![-1.0, 8.0, -1.0],
     //     vec![-1.0, -1.0, -1.0],
-    // ];
+    // ]; // edges
     let kernel = vec![
         vec![1.0, 0.0, 1.0],
         vec![0.0, 1.0, 0.0],
         vec![1.0, 0.0, 1.0],
-    ];
-    // let kernel = vec![
-    //     vec![0.0, -1.0, 0.0],
-    //     vec![-1.0, 5.0, -1.0],
-    //     vec![0.0, -1.0, 0.0],
-    // ];
+    ]; // xkern
+       // let kernel = vec![
+       //     vec![0.0, -1.0, 0.0],
+       //     vec![-1.0, 5.0, -1.0],
+       //     vec![0.0, -1.0, 0.0],
+       // ]; // blur
 
     // let mut network = Network::default();
     let mut network = Network::from_file("neurals/81acc.rn");
@@ -91,7 +91,7 @@ fn test_mnist() {
         .add_layer(30, &sigmoid)
         .add_layer(10, &softmax)
         .loss(&categorical_cross_entropy)
-        // .optimizer(Adam::new(&vec![625, 50, 10], 0.01, 0.9, 0.99))
+        .optimizer(Adam::new(0.01, 0.9, 0.99))
         .optimizer(GradDescent::new())
         .add_transform(Convolve2D(kernel.clone(), 28))
         .add_transform(MaxPool((2, 2)))
