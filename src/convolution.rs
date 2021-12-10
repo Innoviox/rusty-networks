@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-fn _filter_fn<F>(matrix: &Vec<Vec<f64>>, dim: (usize, usize), f: F) -> Vec<Vec<f64>>
+fn _filter_fn<F>(matrix: &[Vec<f64>], dim: (usize, usize), f: F) -> Vec<Vec<f64>>
 where
     F: Fn(usize, usize, usize, usize, f64) -> f64,
 {
@@ -76,11 +76,11 @@ pub fn max_pool(matrix: Vec<Vec<f64>>, filter_size: (usize, usize)) -> Vec<Vec<f
     })
 }
 
-pub fn flatten(matrix: &Vec<Vec<f64>>) -> Vec<f64> {
+pub fn flatten(matrix: &[Vec<f64>]) -> Vec<f64> {
     let mut result = vec![];
     for i in matrix {
         for j in i {
-            result.push(j.clone());
+            result.push(*j);
         }
     }
 

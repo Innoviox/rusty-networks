@@ -4,10 +4,10 @@ use serde::Serialize;
 use std::f64::consts::E;
 use std::fs;
 
-pub type Activation = dyn Fn(Vec<f64>) -> Vec<f64>;
-pub type Loss = dyn Fn(&Vec<f64>, &Vec<f64>) -> f64;
+pub type Activation = dyn Fn(&[f64]) -> Vec<f64>;
+pub type Loss = dyn Fn(&[f64], &[f64]) -> f64;
 
-pub fn dot(input: &Vec<f64>, weights: &Vec<f64>) -> f64 {
+pub fn dot(input: &[f64], weights: &[f64]) -> f64 {
     let mut result = weights[0];
     for i in 1..weights.len() {
         result += input[i - 1] * weights[i];
@@ -18,17 +18,17 @@ pub fn dot(input: &Vec<f64>, weights: &Vec<f64>) -> f64 {
 
 // type func = Box<dyn Fn(f64) -> f64>; // might make things look nicer idk
 
-pub fn sigmoid(x: Vec<f64>) -> Vec<f64> {
+pub fn sigmoid(x: &[f64]) -> Vec<f64> {
     x.iter().map(|i| 1.0 / (1.0 + (-i).exp())).collect()
 }
 
-pub fn relu(x: Vec<f64>) -> Vec<f64> {
+pub fn relu(x: &[f64]) -> Vec<f64> {
     x.iter().map(|i| if *i > 0.0 { *i } else { 0.0 }).collect()
 }
 
-pub fn softmax(x: Vec<f64>) -> Vec<f64> {
+pub fn softmax(x: &[f64]) -> Vec<f64> {
     let mut result = vec![];
-    let y: Vec<f64> = x.iter().cloned().collect();
+    let y: Vec<f64> = x.to_vec();
     let sum = y.iter().fold(0.0, |a, b| a + E.powf(*b));
     for j in y {
         result.push(E.powf(j) / sum);
@@ -38,12 +38,12 @@ pub fn softmax(x: Vec<f64>) -> Vec<f64> {
 
 pub fn activation_to_str<'a>(a: &'a Activation) -> &'a str {
     let v = vec![0.01, 0.19, 0.03, 0.08, 0.14, 0.27, 0.03, 0.11, 0.12, 0.01];
-    let e = a(v.clone());
-    if e == sigmoid(v.clone()) {
+    let e = a(&v);
+    if e == sigmoid(&v) {
         "sigmoid"
-    } else if e == relu(v.clone()) {
+    } else if e == relu(&v) {
         "relu"
-    } else if e == softmax(v.clone()) {
+    } else if e == softmax(&v) {
         "softmax"
     } else {
         "unknown"
@@ -62,7 +62,7 @@ pub fn str_to_activation<'a>(s: String) -> Option<&'a Activation> {
 // mean squared error: (actually total squared error):
 // sum squares of difference between output and actual expected value
 // goal is to minimize this
-pub fn mse(output: &Vec<f64>, expected: &Vec<f64>) -> f64 {
+pub fn mse(output: &[f64], expected: &[f64]) -> f64 {
     // gotta be same length
     let mut result = 0.0;
     for i in 0..output.len() {
@@ -72,20 +72,20 @@ pub fn mse(output: &Vec<f64>, expected: &Vec<f64>) -> f64 {
     result
 }
 
-pub fn categorical_cross_entropy(output: &Vec<f64>, expected: &Vec<f64>) -> f64 {
+pub fn categorical_cross_entropy(output: &[f64], expected: &[f64]) -> f64 {
     // -output[argmax(expected)].log10()
     let p = output[argmax(expected)];
     // -(p.log10() + (1.0 - p).log10())
     -p.log10()
 }
 
-pub fn loss_to_str<'a>(a: &Box<&'a Loss>) -> &'a str {
+pub fn loss_to_str<'a>(a: &'a Loss) -> &'a str {
     let v1 = vec![0.01, 0.19, 0.03, 0.08, 0.14, 0.27, 0.03, 0.11, 0.12, 0.01];
-    let v2 = vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    let v2 = vec![1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     let e = a(&v1, &v2);
-    if e == mse(&v1, &v2) {
+    if (e - mse(&v1, &v2)).abs() < 0.01 {
         "mse"
-    } else if e == categorical_cross_entropy(&v1, &v2) {
+    } else if (e - categorical_cross_entropy(&v1, &v2)).abs() < 0.01 {
         "cce"
     } else {
         "unknown"
@@ -116,7 +116,7 @@ pub fn progress_bar<'a, T: 'a>(
     iter.progress_with(bar)
 }
 
-pub fn argmax(input: &Vec<f64>) -> usize {
+pub fn argmax(input: &[f64]) -> usize {
     let mut max = 0.0;
     let mut idx = 0;
 

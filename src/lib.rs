@@ -2,9 +2,7 @@ extern crate bincode;
 
 pub mod config;
 pub mod convolution;
-pub mod layer;
 pub mod network;
-pub mod node;
 pub mod optimizers;
 pub mod utils;
 

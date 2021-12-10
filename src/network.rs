@@ -12,8 +12,8 @@ use std::io::BufWriter;
 pub struct Network {
     // layers: Vec<Layer>,
     weights: Vec<Vec<Vec<f64>>>, // vector of layers of nodes of weights
-    activation: Box<Vec<&'static Activation>>,
-    loss: Box<&'static Loss>,
+    activation: Vec<&'static Activation>,
+    loss: &'static Loss,
     transforms: Vec<convolution::Transform>,
     optimizer: Box<dyn optimizers::Optimizer>,
     shape: Vec<u64>,
@@ -23,8 +23,8 @@ impl Network {
     pub fn default() -> Network {
         Network {
             weights: vec![],
-            activation: Box::new(vec![]),
-            loss: Box::new(&utils::categorical_cross_entropy),
+            activation: vec![],
+            loss: &utils::categorical_cross_entropy,
             transforms: vec![],
             optimizer: optimizers::GradDescent::new(),
             // optimizer: optimizers::Adam::new(&vec![625, 10, 10], 0.01, 0.9, 0.99),
@@ -54,18 +54,18 @@ impl Network {
         self
     }
 
-    pub fn predict(&self, input: &Vec<f64>) -> Vec<f64> {
+    pub fn predict(&self, input: &[f64]) -> Vec<f64> {
         self.evaluate(&self.apply_transforms(input))
     }
 
-    fn evaluate(&self, input: &Vec<f64>) -> Vec<f64> {
+    fn evaluate(&self, input: &[f64]) -> Vec<f64> {
         let mut values: Vec<f64> = input.to_vec();
         for layer_n in 0..self.weights.len() {
             values = (self.activation[layer_n])(
-                self.weights[layer_n]
+                &self.weights[layer_n]
                     .iter()
                     .map(|node| dot(&values, node))
-                    .collect(),
+                    .collect::<Vec<f64>>(),
             );
         }
 
@@ -160,7 +160,7 @@ impl Network {
     }
 
     fn set_up_weights(&mut self) {
-        if self.weights.len() > 0 {
+        if !self.weights.is_empty() {
             return;
         }
 
@@ -198,7 +198,7 @@ impl Network {
     // }
 
     pub fn loss(&mut self, loss: &'static Loss) -> &mut Self {
-        self.loss = Box::new(loss);
+        self.loss = loss;
         self
     }
 
@@ -227,20 +227,20 @@ impl Network {
         self
     }
 
-    pub fn apply_transforms(&self, input: &Vec<f64>) -> Vec<f64> {
+    pub fn apply_transforms(&self, input: &[f64]) -> Vec<f64> {
         let mut matrix2d = vec![];
-        let mut result_vec = input.clone();
+        let mut result_vec = input.to_owned();
         for t in &self.transforms {
             match t {
                 convolution::Transform::Convolve2D(kernel, width) => {
-                    if matrix2d.len() == 0 {
+                    if matrix2d.is_empty() {
                         let mut row = vec![];
                         for (idx, val) in input.iter().enumerate() {
                             if idx == ((matrix2d.len() + 1) * width) {
                                 matrix2d.push(row);
                                 row = vec![];
                             }
-                            row.push(val.clone());
+                            row.push(*val);
                         }
                         matrix2d.push(row);
                     }
@@ -272,7 +272,7 @@ impl Network {
             weights: self.weights.clone(),
             activation: a,
             loss: utils::loss_to_str(&self.loss).to_string(),
-            transforms: self.transforms.iter().map(|i| i.clone()).collect(),
+            transforms: self.transforms.to_vec(),
             shape: self.shape.clone(),
         }
     }
@@ -284,8 +284,8 @@ impl Network {
         }
         Network {
             weights: c.weights,
-            activation: Box::new(a),
-            loss: Box::new(utils::str_to_loss(c.loss).unwrap()),
+            activation: a,
+            loss: utils::str_to_loss(c.loss).unwrap(),
             transforms: c.transforms,
             optimizer: optimizers::GradDescent::new(),
             shape: c.shape,

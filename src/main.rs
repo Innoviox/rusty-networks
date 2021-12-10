@@ -2,7 +2,7 @@ use rustynetworks::convolution::Transform::*;
 use rustynetworks::network::Network;
 use rustynetworks::optimizers::{Adam, GradDescent};
 use rustynetworks::utils::{
-    argmax, categorical_cross_entropy, progress_bar, relu, sigmoid, softmax,
+    argmax, categorical_cross_entropy, mse, progress_bar, relu, sigmoid, softmax,
 };
 use std::fs::File;
 use std::io::prelude::*;
@@ -63,6 +63,10 @@ fn main() {
     // println!("{:?}", sigmoid(v1.clone()));
     // println!("{:?}", relu(v1.clone()));
     // println!("{:?}", softmax(vec![8.0, 5.0, 0.0]));
+    // let v1 = vec![0.01, 0.19, 0.03, 0.08, 0.14, 0.27, 0.03, 0.11, 0.12, 0.01];
+    // let v2 = vec![1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    // println!("{:?}", mse(&v1, &v2));
+    // println!("{:?}", categorical_cross_entropy(&v1, &v2));
 
     test_mnist();
 }
@@ -85,23 +89,23 @@ fn test_mnist() {
        //     vec![0.0, -1.0, 0.0],
        // ]; // blur
 
-    // let mut network = Network::default();
-    let mut network = Network::from_file("neurals/configtesting.rn");
+    let mut network = Network::default();
+    // let mut network = Network::from_file("neurals/configtesting.rn");
 
-    // network
-    //     .add_layer(625, &sigmoid)
-    //     .add_layer(40, &sigmoid)
-    //     .add_layer(10, &softmax)
-    //     .loss(&categorical_cross_entropy)
-    //     .optimizer(Adam::new(0.01, 0.9, 0.99))
-    //     .add_transform(Convolve2D(kernel.clone(), 28))
-    //     .add_transform(MaxPool((2, 2)))
-    //     .add_transform(Flatten());
+    network
+        .add_layer(625, &sigmoid)
+        .add_layer(40, &sigmoid)
+        .add_layer(10, &softmax)
+        .loss(&categorical_cross_entropy)
+        .optimizer(Adam::new(0.01, 0.9, 0.99))
+        .add_transform(Convolve2D(kernel, 28))
+        .add_transform(MaxPool((2, 2)))
+        .add_transform(Flatten());
 
     let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
 
-    // network.train_epochs(&train_img, &train_label, 5);
-    network.save("neurals/configtesting.rn");
+    network.train_epochs(&train_img, &train_label, 5);
+    network.save("neurals/hi.rn");
 
     let mut correct = 0.0;
     for idx in 0..n {

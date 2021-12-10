@@ -1,18 +1,19 @@
 pub trait Optimizer {
-    fn optimize(&mut self, gradient: &Vec<Vec<Vec<f64>>>) -> Vec<Vec<Vec<f64>>>;
-    fn with_shape(&mut self, shape: &Vec<u64>);
+    fn optimize(&mut self, gradient: &[Vec<Vec<f64>>]) -> Vec<Vec<Vec<f64>>>;
+    fn with_shape(&mut self, shape: &[u64]);
 }
 
+#[derive(Clone)]
 pub struct GradDescent {}
 
 impl GradDescent {
     pub fn new() -> Box<GradDescent> {
-        return Box::new(GradDescent {});
+        Box::new(GradDescent {})
     }
 }
 
 impl Optimizer for GradDescent {
-    fn optimize(&mut self, gradient: &Vec<Vec<Vec<f64>>>) -> Vec<Vec<Vec<f64>>> {
+    fn optimize(&mut self, gradient: &[Vec<Vec<f64>>]) -> Vec<Vec<Vec<f64>>> {
         let mut dg = Vec::new();
         for i in 0..gradient.len() {
             dg.push(Vec::new());
@@ -26,10 +27,10 @@ impl Optimizer for GradDescent {
         dg
     }
 
-    fn with_shape(&mut self, shape: &Vec<u64>) {}
+    fn with_shape(&mut self, _shape: &[u64]) {}
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Adam {
     alpha: f64,
     beta1: f64,
@@ -44,12 +45,12 @@ pub struct Adam {
 
 impl Adam {
     fn beta1(&mut self) -> f64 {
-        self.beta1 = self.beta1 * self.start_beta1;
+        self.beta1 *= self.start_beta1;
         self.beta1
     }
 
     fn beta2(&mut self) -> f64 {
-        self.beta2 = self.beta2 * self.start_beta2;
+        self.beta2 *= self.start_beta2;
         self.beta2
     }
 
@@ -76,14 +77,14 @@ impl Adam {
 }
 
 impl Optimizer for Adam {
-    fn with_shape(&mut self, shape: &Vec<u64>) {
+    fn with_shape(&mut self, shape: &[u64]) {
         self.old_m = Vec::new();
         self.old_v = Vec::new();
 
         for (i, layer_n) in shape.iter().skip(1).enumerate() {
             self.old_m.push(Vec::new());
             self.old_v.push(Vec::new());
-            for node_n in 0..layer_n.clone() as usize {
+            for node_n in 0..*layer_n as usize {
                 self.old_m[i].push(Vec::new());
                 self.old_v[i].push(Vec::new());
                 for _weight_n in 0..shape[i] + 1 {
@@ -103,7 +104,7 @@ impl Optimizer for Adam {
         }
     }
 
-    fn optimize(&mut self, gradient: &Vec<Vec<Vec<f64>>>) -> Vec<Vec<Vec<f64>>> {
+    fn optimize(&mut self, gradient: &[Vec<Vec<f64>>]) -> Vec<Vec<Vec<f64>>> {
         let b1 = self.beta1();
         let b2 = self.beta2();
         let a = self.alpha();
