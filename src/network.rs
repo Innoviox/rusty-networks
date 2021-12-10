@@ -1,17 +1,19 @@
+use crate::config::Config;
 use crate::convolution;
 use crate::optimizers;
 use crate::utils;
-use crate::utils::{dot, load, progress_bar};
+use crate::utils::{dot, load, progress_bar, Activation, Loss};
 use bincode::serialize_into;
 use rand::Rng;
 use std::fmt;
 use std::fs::File;
 use std::io::BufWriter;
+
 pub struct Network {
     // layers: Vec<Layer>,
     weights: Vec<Vec<Vec<f64>>>, // vector of layers of nodes of weights
-    activation: Box<Vec<&'static dyn Fn(Vec<f64>) -> Vec<f64>>>,
-    loss: Box<&'static dyn Fn(&Vec<f64>, &Vec<f64>) -> f64>,
+    activation: Box<Vec<&'static Activation>>,
+    loss: Box<&'static Loss>,
     transforms: Vec<convolution::Transform>,
     optimizer: Box<dyn optimizers::Optimizer>,
     shape: Vec<u64>,
@@ -39,14 +41,11 @@ impl Network {
     }
 
     pub fn from_file(filename: &str) -> Network {
-        Network::with_weights(load(filename).unwrap())
+        // Network::with_weights(load(filename).unwrap())
+        Network::from_config(load(filename).unwrap())
     }
 
-    pub fn add_layer(
-        &mut self,
-        n: u64,
-        activation: &'static dyn Fn(Vec<f64>) -> Vec<f64>,
-    ) -> &mut Self {
+    pub fn add_layer(&mut self, n: u64, activation: &'static Activation) -> &mut Self {
         self.shape.push(n);
         if self.shape.len() > 1 {
             self.activation.push(activation);
@@ -198,7 +197,7 @@ impl Network {
     //     self
     // }
 
-    pub fn loss(&mut self, loss: &'static dyn Fn(&Vec<f64>, &Vec<f64>) -> f64) -> &mut Self {
+    pub fn loss(&mut self, loss: &'static Loss) -> &mut Self {
         self.loss = Box::new(loss);
         self
     }
@@ -260,8 +259,37 @@ impl Network {
 
     pub fn save(&self, filename: &str) {
         let mut f = BufWriter::new(File::create(filename).unwrap());
-        serialize_into(&mut f, &self.weights).unwrap();
+        serialize_into(&mut f, &self.to_config()).unwrap();
         println!("Saved to file {}", filename);
+    }
+
+    pub fn to_config(&self) -> Config {
+        let mut a = vec![];
+        for i in self.activation.iter() {
+            a.push(utils::activation_to_str(i).to_string())
+        }
+        Config {
+            weights: self.weights.clone(),
+            activation: a,
+            loss: utils::loss_to_str(&self.loss).to_string(),
+            transforms: self.transforms.iter().map(|i| i.clone()).collect(),
+            shape: self.shape.clone(),
+        }
+    }
+
+    pub fn from_config(c: Config) -> Network {
+        let mut a = vec![];
+        for i in c.activation {
+            a.push(utils::str_to_activation(i).unwrap());
+        }
+        Network {
+            weights: c.weights,
+            activation: Box::new(a),
+            loss: Box::new(utils::str_to_loss(c.loss).unwrap()),
+            transforms: c.transforms,
+            optimizer: optimizers::GradDescent::new(),
+            shape: c.shape,
+        }
     }
 }
 

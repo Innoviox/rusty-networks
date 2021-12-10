@@ -4,6 +4,9 @@ use serde::Serialize;
 use std::f64::consts::E;
 use std::fs;
 
+pub type Activation = dyn Fn(Vec<f64>) -> Vec<f64>;
+pub type Loss = dyn Fn(&Vec<f64>, &Vec<f64>) -> f64;
+
 pub fn dot(input: &Vec<f64>, weights: &Vec<f64>) -> f64 {
     let mut result = weights[0];
     for i in 1..weights.len() {
@@ -33,6 +36,29 @@ pub fn softmax(x: Vec<f64>) -> Vec<f64> {
     result
 }
 
+pub fn activation_to_str<'a>(a: &'a Activation) -> &'a str {
+    let v = vec![0.01, 0.19, 0.03, 0.08, 0.14, 0.27, 0.03, 0.11, 0.12, 0.01];
+    let e = a(v.clone());
+    if e == sigmoid(v.clone()) {
+        "sigmoid"
+    } else if e == relu(v.clone()) {
+        "relu"
+    } else if e == softmax(v.clone()) {
+        "softmax"
+    } else {
+        "unknown"
+    }
+}
+
+pub fn str_to_activation<'a>(s: String) -> Option<&'a Activation> {
+    match s.as_ref() {
+        "sigmoid" => Some(&sigmoid),
+        "relu" => Some(&relu),
+        "softmax" => Some(&softmax),
+        _ => None,
+    }
+}
+
 // mean squared error: (actually total squared error):
 // sum squares of difference between output and actual expected value
 // goal is to minimize this
@@ -51,6 +77,27 @@ pub fn categorical_cross_entropy(output: &Vec<f64>, expected: &Vec<f64>) -> f64 
     let p = output[argmax(expected)];
     // -(p.log10() + (1.0 - p).log10())
     -p.log10()
+}
+
+pub fn loss_to_str<'a>(a: &Box<&'a Loss>) -> &'a str {
+    let v1 = vec![0.01, 0.19, 0.03, 0.08, 0.14, 0.27, 0.03, 0.11, 0.12, 0.01];
+    let v2 = vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    let e = a(&v1, &v2);
+    if e == mse(&v1, &v2) {
+        "mse"
+    } else if e == categorical_cross_entropy(&v1, &v2) {
+        "cce"
+    } else {
+        "unknown"
+    }
+}
+
+pub fn str_to_loss<'a>(s: String) -> Option<&'a Loss> {
+    match s.as_ref() {
+        "mse" => Some(&mse),
+        "cce" => Some(&categorical_cross_entropy),
+        _ => None,
+    }
 }
 
 pub trait ToVec<T> {

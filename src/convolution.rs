@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 fn _filter_fn<F>(matrix: &Vec<Vec<f64>>, dim: (usize, usize), f: F) -> Vec<Vec<f64>>
 where
     F: Fn(usize, usize, usize, usize, f64) -> f64,
@@ -85,6 +87,7 @@ pub fn flatten(matrix: &Vec<Vec<f64>>) -> Vec<f64> {
     result
 }
 
+#[derive(Deserialize, Serialize, Clone)]
 pub enum Transform {
     Convolve2D(Vec<Vec<f64>>, usize),
     MaxPool((usize, usize)),

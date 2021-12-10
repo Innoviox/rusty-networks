@@ -47,7 +47,7 @@ fn read_mnist() -> (
         _read_mnist(
             "mnist/train-images-idx3-ubyte",
             "mnist/train-labels-idx1-ubyte",
-            5000,
+            10000,
         ),
         _read_mnist(
             "mnist/t10k-images-idx3-ubyte",
@@ -59,7 +59,9 @@ fn read_mnist() -> (
 
 fn main() {
     // let v1 = vec![0.01, 0.19, 0.03, 0.08, 0.14, 0.27, 0.03, 0.11, 0.12, 0.01];
-    // println!("{:?}", softmax(v1));
+    // println!("{:?}", softmax(v1.clone()));
+    // println!("{:?}", sigmoid(v1.clone()));
+    // println!("{:?}", relu(v1.clone()));
     // println!("{:?}", softmax(vec![8.0, 5.0, 0.0]));
 
     test_mnist();
@@ -83,28 +85,23 @@ fn test_mnist() {
        //     vec![0.0, -1.0, 0.0],
        // ]; // blur
 
-    let mut network = Network::default();
-    // let mut network = Network::from_file("neurals/86acc.rn");
+    // let mut network = Network::default();
+    let mut network = Network::from_file("neurals/configtesting.rn");
 
-    network
-        .add_layer(625, &sigmoid)
-        .add_layer(40, &sigmoid)
-        .add_layer(10, &softmax)
-        .loss(&categorical_cross_entropy)
-        // .optimizer(Adam::new(0.01, 0.9, 0.99))
-        .optimizer(GradDescent::new())
-        .add_transform(Convolve2D(kernel.clone(), 28))
-        .add_transform(MaxPool((2, 2)))
-        // .add_transform(Convolve2D(kernel.clone(), 25))
-        // .add_transform(MaxPool((2, 2)))
-        // .add_transform(Convolve2D(kernel.clone(), 22))
-        // .add_transform(MaxPool((2, 2)))
-        .add_transform(Flatten());
+    // network
+    //     .add_layer(625, &sigmoid)
+    //     .add_layer(40, &sigmoid)
+    //     .add_layer(10, &softmax)
+    //     .loss(&categorical_cross_entropy)
+    //     .optimizer(Adam::new(0.01, 0.9, 0.99))
+    //     .add_transform(Convolve2D(kernel.clone(), 28))
+    //     .add_transform(MaxPool((2, 2)))
+    //     .add_transform(Flatten());
 
     let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
 
-    network.train_epochs(&train_img, &train_label, 10);
-    network.save("neurals/40-5000-10.rn");
+    // network.train_epochs(&train_img, &train_label, 5);
+    network.save("neurals/configtesting.rn");
 
     let mut correct = 0.0;
     for idx in 0..n {
