@@ -261,6 +261,7 @@ impl Network {
     pub fn save(&self, filename: &str) {
         let mut f = BufWriter::new(File::create(filename).unwrap());
         serialize_into(&mut f, &self.weights).unwrap();
+        println!("Saved to file {}", filename);
     }
 }
 

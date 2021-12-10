@@ -89,6 +89,9 @@ pub fn load<T: DeserializeOwned + Serialize>(file: &str) -> Option<T> {
             println!("Loaded from file {}", file);
             Some(bincode::deserialize(&b).unwrap())
         }
-        Err(_) => None,
+        Err(_) => {
+            println!("File not found {}", file);
+            None
+        }
     }
 }
