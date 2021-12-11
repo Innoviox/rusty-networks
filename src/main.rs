@@ -94,7 +94,7 @@ fn test_mnist() {
 
     network
         .add_layer(625, &sigmoid)
-        .add_layer(40, &sigmoid)
+        .add_layer(30, &sigmoid)
         .add_layer(10, &softmax)
         .loss(&categorical_cross_entropy)
         .optimizer(Adam::new(0.01, 0.9, 0.99))
@@ -104,8 +104,8 @@ fn test_mnist() {
 
     let ((train_img, train_label), (test_img, test_labels)) = read_mnist();
 
-    network.train_epochs(&train_img, &train_label, 5);
-    network.save("neurals/hi.rn");
+    network.train_epochs(&train_img, &train_label, 12);
+    network.save("neurals/86_percent_accuracy.rn");
 
     let mut correct = 0.0;
     for idx in 0..n {
